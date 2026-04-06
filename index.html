@@ -5,119 +5,133 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relay Driver Tree</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Segoe UI',-apple-system,sans-serif; background:#f7f8fa; color:#333; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;--text:#e6edf3;--text2:#8b949e;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--orange:#d29922;--purple:#bc8cff;
+--c-ment:#f85149;--c-ai:#bc8cff;--c-mat:#3fb950;--c-sub:#58a6ff}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;display:flex;flex-direction:column}
 
-.header { background:#fff; padding:10px 20px; border-bottom:1px solid #e0e0e0; display:flex; align-items:center; gap:16px; flex-shrink:0; z-index:20; }
-.header h1 { font-size:17px; font-weight:700; color:#222; white-space:nowrap; }
-.header h1 span { color:#2563eb; }
-.year-tabs { display:flex; gap:2px; background:#f0f0f0; border-radius:8px; padding:3px; }
-.year-tab { padding:6px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; color:#888; border:none; background:transparent; transition:all .15s; }
-.year-tab:hover { color:#333; background:#e8e8e8; }
-.year-tab.active { background:#2563eb; color:#fff; }
+/* Header */
+.hdr{background:var(--bg2);padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0;z-index:20}
+.hdr h1{font-size:16px;font-weight:700;color:var(--text)}
+.hdr h1 b{color:var(--blue)}
+.ytabs{display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:3px}
+.ytab{padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);border:none;background:transparent;transition:.15s}
+.ytab:hover{color:var(--text);background:var(--bg3)}
+.ytab.on{background:var(--blue);color:#fff}
+.sum{display:flex;gap:6px;margin-left:auto}
+.sc{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);text-align:center}
+.sc .sl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.sc .sv{font-size:14px;font-weight:700}
 
-.main-area { flex:1; display:flex; overflow:hidden; }
+/* Legend */
+.leg{display:flex;gap:14px;padding:5px 20px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);align-items:center;flex-shrink:0}
+.leg .li{display:flex;align-items:center;gap:4px}
+.leg .ld{width:8px;height:8px;border-radius:50%}
+.leg .ht{margin-left:auto;opacity:.5}
 
-#canvas-wrap { flex:1; overflow:hidden; position:relative; cursor:grab; background:#f7f8fa; }
-#canvas-wrap.dragging { cursor:grabbing; }
-#canvas { position:absolute; transform-origin:0 0; }
-#lines { position:absolute; top:0; left:0; pointer-events:none; }
-#lines path { fill:none; stroke:#b0b8c4; stroke-width:2; }
-#nodes { position:absolute; top:0; left:0; }
+/* Main */
+.main{flex:1;display:flex;overflow:hidden}
+#cw{flex:1;overflow:hidden;position:relative;cursor:grab}
+#cw.drag{cursor:grabbing}
+#cv{position:absolute;transform-origin:0 0}
+#ln{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+#ln path{fill:none;stroke-width:2;opacity:.6}
+#nd{position:absolute;top:0;left:0}
 
-.pill { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 18px; border-radius:999px; font-size:12px; cursor:pointer; white-space:nowrap; transition:all 0.25s ease; box-shadow:0 2px 6px rgba(0,0,0,0.08); user-select:none; min-width:120px; text-align:center; }
-.pill:hover { box-shadow:0 3px 12px rgba(0,0,0,0.15); transform:scale(1.03); z-index:5; }
-.pill .p-name { font-weight:600; font-size:11px; line-height:1.3; }
-.pill .p-val { font-weight:700; font-size:13px; line-height:1.3; }
-.pill .p-edit { font-size:9px; opacity:0.5; }
-.pill.has-kids::after { content:'\25B6'; position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:8px; opacity:0.3; }
-.pill.expanded::after { display:none; }
+/* Pills */
+.p{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;user-select:none;min-width:110px;text-align:center;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.p:hover{box-shadow:0 0 20px rgba(88,166,255,.2);transform:scale(1.04);z-index:5}
+.p .pn{font-weight:600;font-size:10px;line-height:1.3;opacity:.85}
+.p .pv{font-weight:700;font-size:14px;line-height:1.3}
+.p .pe{font-size:8px;opacity:.4}
+.p.hk::after{content:'\25B6';position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:7px;opacity:.25}
+.p.ex::after{display:none}
 
-.pill-calc { background:#1e293b; color:#f1f5f9; }
-.pill-calc.c-mentoring { background:#b91c1c; color:#fee2e2; }
-.pill-calc.c-ai { background:#6d28d9; color:#ede9fe; }
-.pill-calc.c-mat { background:#047857; color:#d1fae5; }
-.pill-calc.c-sub { background:#1d4ed8; color:#dbeafe; }
-.pill-data { background:#e2e8f0; color:#1e293b; border:1.5px solid #94a3b8; }
-.pill-input { background:#fef9ee; color:#78350f; border:2px dashed #f59e0b; }
-.pill-input:hover { background:#fef3c7; border-color:#d97706; }
-.pill-ref { background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; opacity:0.6; font-style:italic; }
+/* Pill types */
+.p-c{background:rgba(30,41,59,.85);color:#f1f5f9}
+.p-c.cm{background:rgba(220,38,38,.75);color:#fecaca}
+.p-c.ca{background:rgba(109,40,217,.75);color:#ede9fe}
+.p-c.cg{background:rgba(4,120,87,.75);color:#d1fae5}
+.p-c.cb{background:rgba(29,78,216,.75);color:#dbeafe}
+.p-d{background:rgba(51,65,85,.6);color:#94a3b8;border:1px solid #475569}
+.p-i{background:rgba(120,53,15,.25);color:#fbbf24;border:1.5px dashed #f59e0b}
+.p-i:hover{background:rgba(120,53,15,.4);border-color:#fbbf24}
+.p-r{background:rgba(51,65,85,.3);color:#64748b;border:1px solid #334155;opacity:.5;font-style:italic}
 
-.op-circle { position:absolute; width:24px; height:24px; border-radius:50%; background:#475569; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:3; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+/* Operator */
+.op{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--bg3);color:var(--text);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:3;border:1px solid var(--border)}
 
-.inline-input { width:60px; background:rgba(255,255,255,0.9); border:1px solid #f59e0b; border-radius:4px; padding:2px 4px; font-size:12px; font-weight:600; text-align:center; color:#78350f; outline:none; }
+/* Inline edit */
+.p .ie{width:56px;background:rgba(0,0,0,.4);border:1px solid var(--orange);border-radius:4px;padding:2px;font-size:12px;font-weight:700;text-align:center;color:#fbbf24;outline:none}
+
+/* Flash animation */
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(251,191,36,.6)}50%{box-shadow:0 0 24px 4px rgba(251,191,36,.4)}100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}}
+.p.flash{animation:flash .6s ease-out}
+
+/* Tooltip */
+.tip{position:absolute;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text);pointer-events:none;z-index:50;max-width:280px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transition:opacity .15s}
+.tip.show{opacity:1}
+.tip .tf{color:var(--text2);margin-bottom:4px}
+.tip .tv{font-weight:700;font-size:13px;margin-bottom:6px}
+.tip table{width:100%;font-size:10px;border-collapse:collapse}
+.tip td{padding:2px 4px;border-bottom:1px solid var(--border)}
+.tip td:last-child{text-align:right;font-weight:600}
 
 /* Side Panel */
-.side-panel { width:0; overflow:hidden; background:#fff; border-left:1px solid #e0e0e0; transition:width .3s ease; flex-shrink:0; display:flex; flex-direction:column; }
-.side-panel.open { width:340px; }
-.side-toggle { position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:15; background:#fff; border:1px solid #ddd; border-right:none; border-radius:8px 0 0 8px; padding:8px 4px; cursor:pointer; font-size:14px; box-shadow:-2px 0 6px rgba(0,0,0,0.06); }
-.side-toggle:hover { background:#f0f0f0; }
-.side-header { padding:14px 16px; border-bottom:1px solid #eee; font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
-.side-header button { background:none; border:none; font-size:18px; cursor:pointer; color:#999; }
-.side-body { flex:1; overflow-y:auto; padding:16px; }
+.sp{width:0;overflow:hidden;background:var(--bg2);border-left:1px solid var(--border);transition:width .3s;flex-shrink:0;display:flex;flex-direction:column}
+.sp.open{width:320px}
+.spbtn{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:15;background:var(--bg2);border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;padding:8px 5px;cursor:pointer;font-size:13px;color:var(--text2)}
+.spbtn:hover{background:var(--bg3);color:var(--text)}
+.sph{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+.sph button{background:none;border:none;font-size:16px;cursor:pointer;color:var(--text2)}
+.spb{flex:1;overflow-y:auto;padding:14px}
 
-.chart-bar-group { margin-bottom:4px; }
-.chart-bar-wrap { display:flex; height:28px; border-radius:4px; overflow:hidden; background:#f0f0f0; }
-.chart-seg { height:100%; transition:width .3s ease; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:600; color:#fff; min-width:0; overflow:hidden; }
-.chart-label { font-size:12px; font-weight:600; margin-bottom:2px; display:flex; justify-content:space-between; }
-.chart-label .yr-val { color:#2563eb; }
+/* Modal */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.mo.show{display:flex}
+.md{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;max-width:620px;width:92%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);color:var(--text)}
+.md h3{font-size:14px;margin-bottom:10px}
+.md table{width:100%;border-collapse:collapse;font-size:11px}
+.md th,.md td{padding:5px 8px;border-bottom:1px solid var(--border);text-align:left}
+.md th{background:var(--bg3);font-weight:600;color:var(--text2)}
+.md input[type=number]{width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg);color:var(--orange);font-weight:600}
+.md .cb{float:right;background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)}
 
-.cagr-section { margin-top:20px; padding-top:16px; border-top:1px solid #eee; }
-.cagr-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:13px; }
-.cagr-row .cagr-label { color:#555; }
-.cagr-row .cagr-val { font-weight:700; display:flex; align-items:center; gap:4px; }
-.cagr-row .cagr-val.positive { color:#059669; }
-.cagr-row .cagr-val.negative { color:#dc2626; }
-.cagr-arrow { font-size:10px; }
-
-.legend-bar { display:flex; gap:12px; padding:6px 20px; background:#fff; border-bottom:1px solid #eee; font-size:10px; color:#999; flex-shrink:0; align-items:center; }
-.legend-bar .li { display:flex; align-items:center; gap:3px; }
-.legend-bar .ld { width:8px; height:8px; border-radius:50%; }
-.legend-bar .hint { margin-left:auto; font-size:10px; color:#bbb; }
-
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; }
-.modal-overlay.show { display:flex; }
-.modal { background:#fff; border-radius:12px; padding:20px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
-.modal h3 { font-size:15px; margin-bottom:12px; }
-.modal table { width:100%; border-collapse:collapse; font-size:12px; }
-.modal th,.modal td { padding:5px 8px; border-bottom:1px solid #f0f0f0; text-align:left; }
-.modal th { background:#f8f8f8; font-weight:600; }
-.modal input[type=number] { width:80px; padding:3px 6px; border:1px solid #ddd; border-radius:4px; font-size:12px; }
-.modal .close-btn { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
-
-.pill { transition: left 0.4s ease, top 0.4s ease, opacity 0.4s ease, transform 0.25s ease; }
+/* Minimap */
+.mm{position:absolute;bottom:12px;right:12px;width:180px;height:120px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;z-index:10;overflow:hidden;opacity:.7}
+.mm:hover{opacity:1}
+.mm canvas{width:100%;height:100%}
 
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>Relay <span>매출 Driver Tree</span></h1>
-  <div class="year-tabs" id="yearTabs"></div>
+<div class="hdr">
+  <h1>Relay <b>매출 Driver Tree</b></h1>
+  <div class="ytabs" id="YT"></div>
+  <div class="sum" id="SM"></div>
 </div>
-<div class="legend-bar">
-  <div class="li"><div class="ld" style="background:#e2e8f0;border:1px solid #94a3b8"></div> 실제 데이터</div>
-  <div class="li"><div class="ld" style="background:#fef9ee;border:1.5px dashed #f59e0b"></div> 가정치 (클릭 편집)</div>
-  <div class="li"><div class="ld" style="background:#1e293b"></div> 계산값</div>
-  <span class="hint">드래그:이동 | 스크롤:확대축소 | 노란pill클릭:직접편집</span>
+<div class="leg">
+  <div class="li"><div class="ld" style="background:rgba(51,65,85,.6);border:1px solid #475569"></div>실제 데이터</div>
+  <div class="li"><div class="ld" style="background:rgba(120,53,15,.25);border:1.5px dashed #f59e0b"></div>가정치 (클릭 편집)</div>
+  <div class="li"><div class="ld" style="background:rgba(30,41,59,.85)"></div>계산값</div>
+  <span class="ht">드래그=이동 | 스크롤=줌 | 노란pill=편집 | 우클릭=세그먼트</span>
 </div>
-<div class="main-area">
-  <div id="canvas-wrap">
-    <div id="canvas">
-      <svg id="lines"></svg>
-      <div id="nodes"></div>
+<div class="main">
+  <div id="cw">
+    <div id="cv">
+      <svg id="ln"></svg>
+      <div id="nd"></div>
     </div>
-    <button class="side-toggle" id="sideToggle" onclick="toggleSidePanel()">📊</button>
+    <div class="tip" id="tip"></div>
+    <button class="spbtn" onclick="toggleSP()">&#9776;</button>
   </div>
-  <div class="side-panel" id="sidePanel">
-    <div class="side-header">
-      <span>매출 추이 (2026-2030)</span>
-      <button onclick="toggleSidePanel()">&times;</button>
-    </div>
-    <div class="side-body" id="sideBody"></div>
+  <div class="sp" id="SP">
+    <div class="sph"><span>Revenue Forecast</span><button onclick="toggleSP()">&times;</button></div>
+    <div class="spb" id="SB"></div>
   </div>
 </div>
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modalContent"></div>
+<div class="mo" id="MO">
+  <div class="md" id="MC"></div>
 </div>
 
 <script>
@@ -265,437 +279,369 @@ function fmtNum(v) {
   return v.toFixed(1);
 }
 
-// ========== TREE DEFINITION ==========
-function buildTree() {
-  const yr = currentYear;
-  const c = computed;
-  function n(id,label,type,unit,opts){return Object.assign({id,label,type,unit,children:[],op:null,color:null},opts);}
+// ========== TREE ==========
+function buildTree(){
+  var c=computed,yr=currentYear;
+  function N(id,l,t,u,o){return Object.assign({id:id,label:l,type:t,unit:u,children:[],op:null,color:null,colorClass:null},o||{});}
 
-  const enrolled = n('enrolled','가입 멘티','calc','명',{
-    value:c.totalEnrolled, op:'x', segData:{calc:'enrolled'},
-    children:[
-      n('tam','TAM','calc','명',{value:c.totalTAM, op:'÷', segData:{calc:'tam'},
-        children:[
-          n('applicants','지원인원','data','명',{dataKey:'S1.applicants', segData:{data:'applicants',source:'S1'}}),
-          n('dedup','중복배수','assumption','배',{dataKey:'S1.dedup', segData:{data:'dedup',source:'S1'}, segEditable:true})
-        ]}),
-      n('awareness','인지율','assumption','%',{dataKey:'S2.awareness', segData:{data:'awareness',source:'S2'}, segEditable:true}),
-      n('signup','가입전환율','assumption','%',{dataKey:'S2.signup', segData:{data:'signup',source:'S2'}, segEditable:true})
-    ]});
+  var enrolled=N('enrolled','가입 멘티','calc','명',{value:c.totalEnrolled,op:'x',segData:{calc:'enrolled'},children:[
+    N('tam','TAM','calc','명',{value:c.totalTAM,op:'÷',segData:{calc:'tam'},children:[
+      N('applicants','지원인원','data','명',{dataKey:'S1.applicants',segData:{data:'applicants',source:'S1'}}),
+      N('dedup','중복배수','assumption','배',{dataKey:'S1.dedup',segData:{data:'dedup',source:'S1'},segEditable:true})]}),
+    N('awareness','인지율','assumption','%',{dataKey:'S2.awareness',segData:{data:'awareness',source:'S2'},segEditable:true}),
+    N('signup','가입전환율','assumption','%',{dataKey:'S2.signup',segData:{data:'signup',source:'S2'},segEditable:true})]});
 
-  const active = n('active','활성 멘티','calc','명',{
-    value:c.totalActive, op:'x', segData:{calc:'active'},
-    children:[
-      enrolled,
-      n('activation','활성화율','assumption','%',{dataKey:'S2.activation', segData:{data:'activation',source:'S2'}, segEditable:true})
-    ]});
+  var active=N('active','활성 멘티','calc','명',{value:c.totalActive,op:'x',segData:{calc:'active'},children:[
+    enrolled,
+    N('activation','활성화율','assumption','%',{dataKey:'S2.activation',segData:{data:'activation',source:'S2'},segEditable:true})]});
 
-  return n('total','Total Revenue','calc','백만₩',{
-    value:c.totalRevenue, op:'+', color:'#1e293b',
-    children:[
-      n('mentoring','멘토링 매출','calc','백만₩',{
-        value:c.totalMentoring, op:'x', color:'#b91c1c', colorClass:'c-mentoring',
-        children:[
-          n('mGMV','멘토링 GMV','calc','백만₩',{
-            value:c.totalMentoringGMV, op:'x',
-            children:[
-              n('mTxn','거래 건수','calc','건',{
-                value:c.totalTxnCount, op:'x', segData:{calc:'txnCount'},
-                children:[
-                  active,
-                  n('txnFreq','거래횟수','assumption','회',{dataKey:'S2.txnFreq', segData:{data:'txnFreq',source:'S2'}, segEditable:true})
-                ]}),
-              n('mPrice','멘토링 단가','assumption','₩K',{dataKey:'S3.mentoringPrice', segData:{data:'mentoringPrice',source:'S3'}, segEditable:true})
-            ]}),
-          n('mTake','Take Rate','assumption','%',{dataKey:'S3.mentoringTake', segData:{data:'mentoringTake',source:'S3'}, segEditable:true})
-        ]}),
-      n('ai','AI 매출','calc','백만₩',{
-        value:c.totalAI, op:'x', color:'#6d28d9', colorClass:'c-ai',
-        children:[
-          n('aiTxn','AI 이용건수','calc','건',{
-            value:c.totalAITxn, op:'x', segData:{calc:'aiTxn'},
-            children:[
-              n('aiUsers','AI 이용자','calc','명',{
-                value:c.totalAIUsers, op:'x', segData:{calc:'aiUsers'},
-                children:[
-                  n('enrolled_ref2','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
-                  n('aiExposure','AI 노출률','assumption','%',{dataKey:'S2.aiExposure', segData:{data:'aiExposure',source:'S2'}, segEditable:true}),
-                  n('aiConversion','AI 전환율','assumption','%',{dataKey:'S2.aiConversion', segData:{data:'aiConversion',source:'S2'}, segEditable:true})
-                ]}),
-              n('aiUsageFreq','이용횟수','assumption','회',{dataKey:'S2.aiUsageFreq', segData:{data:'aiUsageFreq',source:'S2'}, segEditable:true})
-            ]}),
-          n('aiPrice','AI 단가','assumption','₩K',{dataKey:'S3.aiPrice', segData:{data:'aiPrice',source:'S3'}, segEditable:true})
-        ]}),
-      n('mat','자료 매출','calc','백만₩',{
-        value:c.totalMat, op:'x', color:'#047857', colorClass:'c-mat',
-        children:[
-          n('matGMV','자료 GMV','calc','백만₩',{
-            value:c.totalMatGMV, op:'x',
-            children:[
-              n('matTxn','구매건수','calc','건',{
-                value:c.totalMatTxn, op:'x', segData:{calc:'matTxn'},
-                children:[
-                  n('matBuyers','구매자','calc','명',{
-                    value:c.totalMatBuyers, op:'x', segData:{calc:'matBuyers'},
-                    children:[
-                      n('enrolled_ref3','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
-                      n('matRate','구매율','assumption','%',{dataKey:'S2.matPurchaseRate', segData:{data:'matPurchaseRate',source:'S2'}, segEditable:true})
-                    ]}),
-                  n('matFreq','인당건수','assumption','건',{dataKey:'S2.matPurchaseFreq', segData:{data:'matPurchaseFreq',source:'S2'}, segEditable:true})
-                ]}),
-              n('matPrice','자료 단가','assumption','₩K',{dataKey:'S3.matPrice', segData:{data:'matPrice',source:'S3'}, segEditable:true})
-            ]}),
-          n('matTake','Take Rate','assumption','%',{isSingle:true, value:S3.matTake[currentYear]||0.3})
-        ]}),
-      n('sub','구독 매출','calc','백만₩',{
-        value:c.totalSub, op:'x', color:'#1d4ed8', colorClass:'c-sub',
-        children:[
-          n('subMonths','총 과금개월','calc','개월',{
-            value:c.totalSubMonths, op:'x', segData:{calc:'subMonths'},
-            children:[
-              n('subscribers','구독자','calc','명',{
-                value:c.totalSubscribers, op:'x', segData:{calc:'subscribers'},
-                children:[
-                  n('enrolled_ref4','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
-                  n('subConv','구독전환율','assumption','%',{dataKey:'S2.subConversion', segData:{data:'subConversion',source:'S2'}, segEditable:true})
-                ]}),
-              n('subDur','구독기간','assumption','개월',{dataKey:'S2.subDuration', segData:{data:'subDuration',source:'S2'}, segEditable:true})
-            ]}),
-          n('subPrice','월구독료','assumption','₩K',{dataKey:'S3.subPrice', segData:{data:'subPrice',source:'S3'}, segEditable:true})
-        ]})
-    ]});
+  return N('total','Total Revenue','calc','백만₩',{value:c.totalRevenue,op:'+',color:'#58a6ff',children:[
+    N('mentoring','멘토링 매출','calc','백만₩',{value:c.totalMentoring,op:'x',color:'#f85149',colorClass:'cm',children:[
+      N('mGMV','멘토링 GMV','calc','백만₩',{value:c.totalMentoringGMV,op:'x',children:[
+        N('mTxn','거래 건수','calc','건',{value:c.totalTxnCount,op:'x',segData:{calc:'txnCount'},children:[
+          active,
+          N('txnFreq','거래횟수','assumption','회',{dataKey:'S2.txnFreq',segData:{data:'txnFreq',source:'S2'},segEditable:true})]}),
+        N('mPrice','멘토링 단가','assumption','₩K',{dataKey:'S3.mentoringPrice',segData:{data:'mentoringPrice',source:'S3'},segEditable:true})]}),
+      N('mTake','Take Rate','assumption','%',{dataKey:'S3.mentoringTake',segData:{data:'mentoringTake',source:'S3'},segEditable:true})]}),
+    N('ai','AI 매출','calc','백만₩',{value:c.totalAI,op:'x',color:'#bc8cff',colorClass:'ca',children:[
+      N('aiTxn','AI 이용건수','calc','건',{value:c.totalAITxn,op:'x',segData:{calc:'aiTxn'},children:[
+        N('aiUsers','AI 이용자','calc','명',{value:c.totalAIUsers,op:'x',segData:{calc:'aiUsers'},children:[
+          N('er2','가입 멘티','calc','명',{value:c.totalEnrolled,isRef:true}),
+          N('aiExp','AI 노출률','assumption','%',{dataKey:'S2.aiExposure',segData:{data:'aiExposure',source:'S2'},segEditable:true}),
+          N('aiConv','AI 전환율','assumption','%',{dataKey:'S2.aiConversion',segData:{data:'aiConversion',source:'S2'},segEditable:true})]}),
+        N('aiFreq','이용횟수','assumption','회',{dataKey:'S2.aiUsageFreq',segData:{data:'aiUsageFreq',source:'S2'},segEditable:true})]}),
+      N('aiPrice','AI 단가','assumption','₩K',{dataKey:'S3.aiPrice',segData:{data:'aiPrice',source:'S3'},segEditable:true})]}),
+    N('mat','자료 매출','calc','백만₩',{value:c.totalMat,op:'x',color:'#3fb950',colorClass:'cg',children:[
+      N('matGMV','자료 GMV','calc','백만₩',{value:c.totalMatGMV,op:'x',children:[
+        N('matTxn','구매건수','calc','건',{value:c.totalMatTxn,op:'x',segData:{calc:'matTxn'},children:[
+          N('matB','구매자','calc','명',{value:c.totalMatBuyers,op:'x',segData:{calc:'matBuyers'},children:[
+            N('er3','가입 멘티','calc','명',{value:c.totalEnrolled,isRef:true}),
+            N('matR','구매율','assumption','%',{dataKey:'S2.matPurchaseRate',segData:{data:'matPurchaseRate',source:'S2'},segEditable:true})]}),
+          N('matF','인당건수','assumption','건',{dataKey:'S2.matPurchaseFreq',segData:{data:'matPurchaseFreq',source:'S2'},segEditable:true})]}),
+        N('matP','자료 단가','assumption','₩K',{dataKey:'S3.matPrice',segData:{data:'matPrice',source:'S3'},segEditable:true})]}),
+      N('matTk','Take Rate','assumption','%',{isSingle:true,value:S3.matTake[yr]||0.3})]}),
+    N('sub','구독 매출','calc','백만₩',{value:c.totalSub,op:'x',color:'#58a6ff',colorClass:'cb',children:[
+      N('subMo','총 과금개월','calc','개월',{value:c.totalSubMonths,op:'x',segData:{calc:'subMonths'},children:[
+        N('subs','구독자','calc','명',{value:c.totalSubscribers,op:'x',segData:{calc:'subscribers'},children:[
+          N('er4','가입 멘티','calc','명',{value:c.totalEnrolled,isRef:true}),
+          N('subC','구독전환율','assumption','%',{dataKey:'S2.subConversion',segData:{data:'subConversion',source:'S2'},segEditable:true})]}),
+        N('subD','구독기간','assumption','개월',{dataKey:'S2.subDuration',segData:{data:'subDuration',source:'S2'},segEditable:true})]}),
+      N('subP','월구독료','assumption','₩K',{dataKey:'S3.subPrice',segData:{data:'subPrice',source:'S3'},segEditable:true})]})
+  ]});
 }
 
 // ========== LAYOUT ==========
-const CARD_H=46, LEVEL_GAP=220, V_GAP=12;
-const expandedNodes = new Set(['total']);
-// Store previous positions for animation
-let prevPositions = {};
+var CH=44,LG=210,VG=12;
+var expanded=new Set(['total']);
 
-function visKids(nd){
-  if(!nd.children||!nd.children.length||nd.isRef) return [];
-  return expandedNodes.has(nd.id)?nd.children:[];
-}
+function vk(n){return(!n.children||!n.children.length||n.isRef||!expanded.has(n.id))?[]:n.children;}
 
-function layoutTree(nd,depth,yStart){
-  nd.x=depth*LEVEL_GAP+50;
-  const kids=visKids(nd);
-  if(!kids.length){ nd.y=yStart; nd._h=CARD_H+V_GAP; return nd._h; }
-  let y=yStart,tot=0;
-  for(const k of kids){ const h=layoutTree(k,depth+1,y); y+=h; tot+=h; }
-  nd.y=(kids[0].y+kids[kids.length-1].y)/2;
-  nd._h=tot;
-  return tot;
+function layout(n,d,y0){
+  n.x=d*LG+50;
+  var k=vk(n);
+  if(!k.length){n.y=y0;n._h=CH+VG;return n._h;}
+  var y=y0,t=0;
+  for(var i=0;i<k.length;i++){var h=layout(k[i],d+1,y);y+=h;t+=h;}
+  n.y=(k[0].y+k[k.length-1].y)/2;
+  n._h=t;
+  return t;
 }
 
 // ========== FORMAT ==========
-function formatVal(nd){
-  if(nd.value!==undefined&&nd.type==='calc'){
-    return nd.unit==='백만₩'?fmtWon(nd.value):fmtNum(nd.value);
+function fv(n){
+  if(n.value!==undefined&&n.type==='calc')return n.unit==='백만₩'?fmtWon(n.value):fmtNum(n.value);
+  if(n.isSingle)return n.unit==='%'?fmtPct(n.value||0):fmtNum(n.value||0);
+  if(n.dataKey){
+    var p=n.dataKey.split('.'),o=p[0]==='S1'?S1:p[0]==='S2'?S2:S3,k=p[1];
+    if(!o[k])return'0';
+    var s=0,c=0;
+    for(var i=0;i<SEGMENTS.length;i++){var v=o[k][SEGMENTS[i]]&&o[k][SEGMENTS[i]][currentYear];if(v!==undefined){s+=v;c++;}}
+    var a=c>0?s/c:0;
+    return n.unit==='%'?fmtPct(a):fmtNum(a);
   }
-  if(nd.isSingle) return nd.unit==='%'?fmtPct(nd.value||0):fmtNum(nd.value||0);
-  if(nd.dataKey){
-    const[s,k]=nd.dataKey.split('.');
-    const obj=s==='S1'?S1:s==='S2'?S2:S3;
-    if(!obj[k])return '0';
-    let sm=0,cnt=0;
-    for(const seg of SEGMENTS){const v=obj[k][seg]&&obj[k][seg][currentYear];if(v!==undefined){sm+=v;cnt++;}}
-    const avg=cnt>0?sm/cnt:0;
-    return nd.unit==='%'?fmtPct(avg):fmtNum(avg);
-  }
-  return '';
+  return'';
 }
 
-function pillCls(nd){
-  if(nd.isRef)return 'pill pill-ref';
-  if(nd.type==='data')return 'pill pill-data';
-  if(nd.type==='assumption')return 'pill pill-input';
-  let c='pill pill-calc';if(nd.colorClass)c+=' '+nd.colorClass;return c;
+function pc(n){
+  if(n.isRef)return'p p-r';
+  if(n.type==='data')return'p p-d';
+  if(n.type==='assumption')return'p p-i';
+  var c='p p-c';if(n.colorClass)c+=' '+n.colorClass;return c;
 }
 
-// ========== 2-PASS RENDER: first place pills, then measure & draw lines ==========
-function renderAll(animate){
-  const tree=buildTree();
-  layoutTree(tree,0,50);
+// ========== RENDER (synchronous, no rAF) ==========
+function render(){
+  var tree=buildTree();
+  layout(tree,0,50);
 
-  const nodesDiv=document.getElementById('nodes');
-  const svg=document.getElementById('lines');
+  // Flatten
+  var all=[];
+  (function f(n){all.push(n);var k=vk(n);for(var i=0;i<k.length;i++)f(k[i]);})(tree);
 
-  // Collect all nodes flat
-  const allNodes=[];
-  function collect(nd){allNodes.push(nd);visKids(nd).forEach(collect);}
-  collect(tree);
-
-  // Build pills HTML
-  let pills='',ops='';
-  for(const nd of allNodes){
-    const val=formatVal(nd);
-    const exp=expandedNodes.has(nd.id);
-    const hasK=nd.children&&nd.children.length>0&&!nd.isRef;
-    const aCls=hasK?(exp?' expanded':' has-kids'):'';
-    const isInput=nd.type==='assumption'&&!nd.isRef;
-    const click=isInput
-      ?'onclick="event.stopPropagation();showModal(\x27'+nd.id+'\x27)"'
-      :'onclick="toggleNode(\x27'+nd.id+'\x27)"';
-
-    // Animation: start from parent position or previous position
-    const prev=prevPositions[nd.id];
-    const startX=animate&&!prev?nd.x:nd.x;
-    const startY=animate&&!prev?nd.y:nd.y;
-    const opacity=animate&&!prev?'opacity:0;':'';
-
-    pills+='<div class="'+pillCls(nd)+aCls+'" id="pill-'+nd.id+'" style="left:'+nd.x+'px;top:'+nd.y+'px;'+opacity+'" '+click+'>';
-    pills+='<span class="p-name">'+nd.label+'</span>';
-    pills+='<span class="p-val">'+val+'</span>';
-    if(isInput)pills+='<span class="p-edit">click to edit</span>';
-    pills+='</div>';
+  // 1) Build pill HTML (hidden initially for measurement)
+  var nd=document.getElementById('nd');
+  var ph='';
+  for(var i=0;i<all.length;i++){
+    var n=all[i],v=fv(n),ex=expanded.has(n.id);
+    var hk=n.children&&n.children.length&&!n.isRef;
+    var ac=hk?(ex?' ex':' hk'):'';
+    var isI=n.type==='assumption'&&!n.isRef;
+    var ck=isI?'onclick="editPill(\x27'+n.id+'\x27,event)"':'onclick="tog(\x27'+n.id+'\x27)"';
+    var rc=n.segData&&!n.isRef?'oncontextmenu="event.preventDefault();showModal(\x27'+n.id+'\x27)"':'';
+    ph+='<div class="'+pc(n)+ac+'" id="P'+n.id+'" style="left:'+n.x+'px;top:'+n.y+'px" '+ck+' '+rc+' data-id="'+n.id+'"';
+    ph+=' onmouseenter="showTip(\x27'+n.id+'\x27,event)" onmouseleave="hideTip()">';
+    ph+='<span class="pn">'+n.label+'</span>';
+    ph+='<span class="pv" id="V'+n.id+'">'+v+'</span>';
+    if(isI)ph+='<span class="pe">click to edit</span>';
+    ph+='</div>';
   }
+  // Op circles
+  var oh='';
+  for(var i=0;i<all.length;i++){
+    var n=all[i],k=vk(n);
+    if(k.length&&n.op)oh+='<div class="op" id="O'+n.id+'">'+n.op+'</div>';
+  }
+  nd.innerHTML=ph+oh;
 
-  // Operator circles
-  for(const nd of allNodes){
-    const kids=visKids(nd);
-    if(kids.length>0&&nd.op){
-      const el=nd;
-      ops+='<div class="op-circle" id="op-'+nd.id+'" style="left:0;top:0" data-parent="'+nd.id+'">'+nd.op+'</div>';
+  // 2) Measure pill widths synchronously (DOM is flushed at innerHTML)
+  // Force layout
+  nd.offsetHeight;
+
+  // 3) Position op circles and draw lines
+  var svg=document.getElementById('ln');
+  var paths='';
+  for(var i=0;i<all.length;i++){
+    var n=all[i],k=vk(n);
+    if(!k.length)continue;
+    var pe=document.getElementById('P'+n.id);
+    var pw=pe?pe.offsetWidth:140;
+    var x1=n.x+pw,y1=n.y+CH/2;
+    var sx=x1+4;
+    if(n.op){
+      var oe=document.getElementById('O'+n.id);
+      if(oe){oe.style.left=(x1+8)+'px';oe.style.top=(y1-11)+'px';}
+      sx=x1+34;
     }
-  }
-
-  nodesDiv.innerHTML=pills+ops;
-
-  // Animate new pills in
-  if(animate){
-    requestAnimationFrame(function(){
-      for(const nd of allNodes){
-        const el=document.getElementById('pill-'+nd.id);
-        if(el)el.style.opacity='1';
-      }
-    });
-  }
-
-  // After DOM is rendered, measure actual pill widths and draw lines
-  requestAnimationFrame(function(){
-    drawLines(tree,allNodes,svg);
-    // Save positions for next render
-    prevPositions={};
-    for(const nd of allNodes) prevPositions[nd.id]={x:nd.x,y:nd.y};
-  });
-
-  // Size SVG generously
-  const mx=Math.max(...allNodes.map(n=>n.x))+300;
-  const my=Math.max(...allNodes.map(n=>n.y))+200;
-  svg.setAttribute('width',mx);svg.setAttribute('height',my);
-  svg.style.width=mx+'px';svg.style.height=my+'px';
-
-  renderYearTabs();
-  renderSidePanel();
-}
-
-function drawLines(tree, allNodes, svg){
-  let paths='';
-
-  for(const nd of allNodes){
-    const kids=visKids(nd);
-    if(kids.length===0) continue;
-
-    const parentEl=document.getElementById('pill-'+nd.id);
-    if(!parentEl) continue;
-    const pw=parentEl.offsetWidth||160;
-
-    // Parent right edge center
-    const x1=nd.x+pw;
-    const y1=nd.y+CARD_H/2;
-
-    // If operator exists, position it and start lines after it
-    let lineStartX=x1+4;
-    if(nd.op){
-      const opEl=document.getElementById('op-'+nd.id);
-      if(opEl){
-        opEl.style.left=(x1+8)+'px';
-        opEl.style.top=(y1-12)+'px';
-      }
-      lineStartX=x1+36;
-    }
-
-    for(const kid of kids){
-      const kidEl=document.getElementById('pill-'+kid.id);
-      const kw=kidEl?kidEl.offsetWidth:160;
-      const x2=kid.x;
-      const y2=kid.y+CARD_H/2;
-      const cx1=lineStartX+(x2-lineStartX)*0.4;
-      const cx2=lineStartX+(x2-lineStartX)*0.6;
-      paths+='<path d="M'+lineStartX+','+y1+' C'+cx1+','+y1+' '+cx2+','+y2+' '+x2+','+y2+'"/>';
+    var clr=n.color||'#484f58';
+    for(var j=0;j<k.length;j++){
+      var c=k[j],x2=c.x,y2=c.y+CH/2;
+      var mx=(sx+x2)/2;
+      paths+='<path d="M'+sx+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" stroke="'+clr+'"/>';
     }
   }
   svg.innerHTML=paths;
+
+  // Size SVG
+  var mxx=0,mxy=0;
+  for(var i=0;i<all.length;i++){if(all[i].x>mxx)mxx=all[i].x;if(all[i].y>mxy)mxy=all[i].y;}
+  svg.setAttribute('width',mxx+400);svg.setAttribute('height',mxy+200);
+  svg.style.width=(mxx+400)+'px';svg.style.height=(mxy+200)+'px';
+
+  renderYT();
+  renderSM();
+  renderSP();
+
+  // Store tree for tooltips
+  window._tree=tree;window._all=all;
 }
 
-function renderYearTabs(){
-  const t=document.getElementById('yearTabs');t.innerHTML='';
-  for(const yr of YEARS){
-    const b=document.createElement('button');
-    b.className='year-tab'+(yr===currentYear?' active':'');
+function renderYT(){
+  var t=document.getElementById('YT');t.innerHTML='';
+  for(var i=0;i<YEARS.length;i++){
+    var yr=YEARS[i],b=document.createElement('button');
+    b.className='ytab'+(yr===currentYear?' on':'');
     b.textContent=yr;
-    b.onclick=function(){currentYear=yr;recalcAndRender();};
+    b.setAttribute('data-yr',yr);
+    b.onclick=function(){currentYear=parseInt(this.getAttribute('data-yr'));reCalc();};
     t.appendChild(b);
   }
 }
 
+function renderSM(){
+  var c=computed;
+  document.getElementById('SM').innerHTML=
+    '<div class="sc"><div class="sl">Total</div><div class="sv" style="color:var(--text)">'+fmtWon(c.totalRevenue)+'</div></div>'+
+    '<div class="sc"><div class="sl">멘토링</div><div class="sv" style="color:var(--c-ment)">'+fmtWon(c.totalMentoring)+'</div></div>'+
+    '<div class="sc"><div class="sl">AI</div><div class="sv" style="color:var(--c-ai)">'+fmtWon(c.totalAI)+'</div></div>'+
+    '<div class="sc"><div class="sl">자료</div><div class="sv" style="color:var(--c-mat)">'+fmtWon(c.totalMat)+'</div></div>'+
+    '<div class="sc"><div class="sl">구독</div><div class="sv" style="color:var(--c-sub)">'+fmtWon(c.totalSub)+'</div></div>';
+}
+
+// ========== INLINE EDIT ==========
+function editPill(id,ev){
+  ev.stopPropagation();
+  var tree=buildTree();
+  function find(n){if(n.id===id)return n;for(var i=0;i<(n.children||[]).length;i++){var r=find(n.children[i]);if(r)return r;}return null;}
+  var node=find(tree);
+  if(!node)return;
+  // Show modal for segment editing
+  showModal(id);
+}
+
+// ========== TOOLTIP ==========
+var tipTimer=null;
+function showTip(id,ev){
+  clearTimeout(tipTimer);
+  var tree=window._tree;if(!tree)return;
+  function find(n){if(n.id===id)return n;for(var i=0;i<(n.children||[]).length;i++){var r=find(n.children[i]);if(r)return r;}return null;}
+  var node=find(tree);if(!node)return;
+  var tip=document.getElementById('tip');
+  var h='';
+  if(node.formula)h+='<div class="tf">'+node.formula+'</div>';
+  h+='<div class="tv">'+fv(node)+' '+node.unit+'</div>';
+  if(node.segData&&node.segData.calc){
+    h+='<table>';
+    var vals=[];
+    for(var i=0;i<SEGMENTS.length;i++){
+      var s=SEGMENTS[i],v=computed[node.segData.calc][s]||0;
+      vals.push({s:s,v:v});
+    }
+    vals.sort(function(a,b){return b.v-a.v;});
+    for(var i=0;i<Math.min(5,vals.length);i++){
+      var d=node.unit==='백만₩'?fmtWon(vals[i].v):fmtNum(vals[i].v);
+      h+='<tr><td>'+vals[i].s+'</td><td>'+d+'</td></tr>';
+    }
+    if(vals.length>5)h+='<tr><td colspan="2" style="color:var(--text2)">... +'+(vals.length-5)+' more</td></tr>';
+    h+='</table>';
+  }
+  tip.innerHTML=h;
+  tip.style.left=(ev.clientX+12)+'px';
+  tip.style.top=(ev.clientY+12)+'px';
+  tip.classList.add('show');
+}
+function hideTip(){var tip=document.getElementById('tip');tip.classList.remove('show');}
+
 // ========== MODAL ==========
-let currentModalId=null;
-function showModal(nodeId){
-  currentModalId=nodeId;
-  const tree=buildTree();
-  function find(nd){if(nd.id===nodeId)return nd;for(const k of(nd.children||[])){const r=find(k);if(r)return r;}return null;}
-  const node=find(tree);
-  if(!node||!node.segData)return;
-  const yr=currentYear, sd=node.segData;
-  let rows='';
-  for(const seg of SEGMENTS){
+var curModal=null;
+function showModal(nid){
+  curModal=nid;
+  var tree=buildTree();
+  function find(n){if(n.id===nid)return n;for(var i=0;i<(n.children||[]).length;i++){var r=find(n.children[i]);if(r)return r;}return null;}
+  var node=find(tree);if(!node||!node.segData)return;
+  var yr=currentYear,sd=node.segData,rows='';
+  for(var i=0;i<SEGMENTS.length;i++){
+    var seg=SEGMENTS[i];
     if(sd.calc){
-      const val=computed[sd.calc][seg]||0;
-      const d=node.unit==='백만₩'?fmtWon(val):node.unit==='%'?fmtPct(val):fmtNum(val);
+      var val=computed[sd.calc][seg]||0;
+      var d=node.unit==='백만₩'?fmtWon(val):node.unit==='%'?fmtPct(val):fmtNum(val);
       rows+='<tr><td>'+seg+'</td><td style="text-align:right">'+d+'</td></tr>';
     } else if(sd.data){
-      const src=sd.source==='S1'?S1:sd.source==='S2'?S2:S3;
-      const val=(src[sd.data][seg]&&src[sd.data][seg][yr])||0;
+      var src=sd.source==='S1'?S1:sd.source==='S2'?S2:S3;
+      var val=(src[sd.data][seg]&&src[sd.data][seg][yr])||0;
       if(node.segEditable){
-        const d=node.unit==='%'?(val*100).toFixed(1):(typeof val==='number'?val:0);
-        rows+='<tr><td>'+seg+'</td><td style="text-align:right"><input type="number" step="any" value="'+d+'" data-source="'+sd.source+'" data-key="'+sd.data+'" data-seg="'+seg+'" data-unit="'+node.unit+'" onchange="onSegChange(this)"/>'+(node.unit==='%'?' %':'')+'</td></tr>';
+        var d=node.unit==='%'?(val*100).toFixed(1):(typeof val==='number'?val:0);
+        rows+='<tr><td>'+seg+'</td><td style="text-align:right"><input type="number" step="any" value="'+d+'" data-source="'+sd.source+'" data-key="'+sd.data+'" data-seg="'+seg+'" data-unit="'+node.unit+'" onchange="segChg(this)"/>'+(node.unit==='%'?' %':'')+'</td></tr>';
       } else {
-        const d=node.unit==='%'?fmtPct(val):fmtNum(val);
+        var d=node.unit==='%'?fmtPct(val):fmtNum(val);
         rows+='<tr><td>'+seg+'</td><td style="text-align:right">'+d+'</td></tr>';
       }
     }
   }
-  document.getElementById('modalContent').innerHTML=
-    '<button class="close-btn" onclick="closeModal()">&times;</button>'+
-    '<h3>'+node.label+' — '+currentYear+'년 세그먼트별</h3>'+
-    '<p style="font-size:11px;color:#999;margin-bottom:8px">값을 수정하면 트리 전체가 즉시 재계산됩니다</p>'+
+  document.getElementById('MC').innerHTML=
+    '<button class="cb" onclick="closeMo()">&times;</button>'+
+    '<h3>'+node.label+' ('+yr+')</h3>'+
+    '<p style="font-size:10px;color:var(--text2);margin-bottom:8px">값 수정 시 트리 전체가 즉시 재계산됩니다</p>'+
     '<table><thead><tr><th>세그먼트</th><th style="text-align:right">값 ('+node.unit+')</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('MO').classList.add('show');
 }
-function closeModal(){document.getElementById('modalOverlay').classList.remove('show');currentModalId=null;}
+function closeMo(){document.getElementById('MO').classList.remove('show');curModal=null;}
 
-window.onSegChange=function(input){
-  const src=input.dataset.source==='S1'?S1:input.dataset.source==='S2'?S2:S3;
-  let val=parseFloat(input.value);if(isNaN(val))return;
-  if(input.dataset.unit==='%')val=val/100;
-  const key=input.dataset.key, seg=input.dataset.seg;
-  if(!src[key])src[key]={};
-  if(!src[key][seg])src[key][seg]={};
+window.segChg=function(inp){
+  var src=inp.dataset.source==='S1'?S1:inp.dataset.source==='S2'?S2:S3;
+  var val=parseFloat(inp.value);if(isNaN(val))return;
+  if(inp.dataset.unit==='%')val=val/100;
+  var key=inp.dataset.key,seg=inp.dataset.seg;
+  if(!src[key])src[key]={};if(!src[key][seg])src[key][seg]={};
   src[key][seg][currentYear]=val;
-  // Recalc FIRST, then re-render tree, then re-open modal
+  // Recalc and render tree immediately
   computed=calcAll(currentYear);
-  renderAll(false);
-  // Re-open modal with fresh data after render
-  setTimeout(function(){ if(currentModalId) showModal(currentModalId); }, 50);
+  render();
+  // Flash changed pills
+  var pills=document.querySelectorAll('.p');
+  for(var i=0;i<pills.length;i++){pills[i].classList.remove('flash');void pills[i].offsetWidth;pills[i].classList.add('flash');}
+  // Re-open modal
+  if(curModal)showModal(curModal);
 };
 
 // ========== SIDE PANEL ==========
-let sidePanelOpen=false;
-function toggleSidePanel(){
-  sidePanelOpen=!sidePanelOpen;
-  document.getElementById('sidePanel').classList.toggle('open',sidePanelOpen);
-  if(sidePanelOpen)renderSidePanel();
-}
+var spOpen=false;
+function toggleSP(){spOpen=!spOpen;document.getElementById('SP').classList.toggle('open',spOpen);if(spOpen)renderSP();}
 
-function renderSidePanel(){
-  if(!sidePanelOpen)return;
-  const colors={mentoring:'#b91c1c',ai:'#6d28d9',mat:'#047857',sub:'#1d4ed8'};
-  const labels={mentoring:'멘토링',ai:'AI',mat:'자료',sub:'구독'};
-  const yearData={};
-  for(const yr of YEARS){
-    const c=calcAll(yr);
-    yearData[yr]={mentoring:c.totalMentoring,ai:c.totalAI,mat:c.totalMat,sub:c.totalSub,total:c.totalRevenue};
+function renderSP(){
+  if(!spOpen)return;
+  var cols={mentoring:'#f85149',ai:'#bc8cff',mat:'#3fb950',sub:'#58a6ff'};
+  var labs={mentoring:'멘토링',ai:'AI',mat:'자료',sub:'구독'};
+  var yd={};
+  for(var i=0;i<YEARS.length;i++){
+    var yr=YEARS[i],c=calcAll(yr);
+    yd[yr]={mentoring:c.totalMentoring,ai:c.totalAI,mat:c.totalMat,sub:c.totalSub,total:c.totalRevenue};
   }
-  const maxTotal=Math.max(...YEARS.map(y=>yearData[y].total));
-
-  let html='<div style="margin-bottom:20px">';
-  html+='<div style="display:flex;gap:12px;margin-bottom:14px;font-size:11px;flex-wrap:wrap">';
-  for(const k of['mentoring','ai','mat','sub'])
-    html+='<div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:3px;background:'+colors[k]+'"></div>'+labels[k]+'</div>';
-  html+='</div>';
-
-  for(const yr of YEARS){
-    const d=yearData[yr];
-    html+='<div style="margin-bottom:12px">';
-    html+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:3px"><span>'+yr+'</span><span style="color:#2563eb">'+fmtWon(d.total)+'</span></div>';
-    html+='<div style="display:flex;height:32px;border-radius:6px;overflow:hidden;background:#f0f0f0;width:100%">';
-    for(const k of['mentoring','ai','mat','sub']){
-      const pct=d.total>0?(d[k]/d.total*100):25;
-      const w=pct;
-      html+='<div style="width:'+w+'%;height:100%;background:'+colors[k]+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap;padding:0 4px">'+(w>10?fmtWon(d[k]):'')+'</div>';
+  var h='<div style="margin-bottom:18px">';
+  // Legend
+  h+='<div style="display:flex;gap:10px;margin-bottom:12px;font-size:10px;flex-wrap:wrap">';
+  var ks=['mentoring','ai','mat','sub'];
+  for(var i=0;i<ks.length;i++)h+='<div style="display:flex;align-items:center;gap:3px"><div style="width:10px;height:10px;border-radius:3px;background:'+cols[ks[i]]+'"></div><span style="color:var(--text2)">'+labs[ks[i]]+'</span></div>';
+  h+='</div>';
+  // Bars - all 100% width
+  for(var i=0;i<YEARS.length;i++){
+    var yr=YEARS[i],d=yd[yr],isCur=yr===currentYear;
+    h+='<div style="margin-bottom:10px'+(isCur?';padding:4px;background:var(--bg3);border-radius:8px':'')+'">';
+    h+='<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:3px;padding:0 2px"><span style="color:var(--text2)">'+yr+(isCur?' ◀':'')+'</span><span style="color:var(--blue)">'+fmtWon(d.total)+'</span></div>';
+    h+='<div style="display:flex;height:28px;border-radius:6px;overflow:hidden;width:100%">';
+    for(var j=0;j<ks.length;j++){
+      var k=ks[j],pct=d.total>0?(d[k]/d.total*100):25;
+      h+='<div style="width:'+pct+'%;height:100%;background:'+cols[k]+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:rgba(255,255,255,.9);overflow:hidden;white-space:nowrap;padding:0 3px">'+(pct>12?fmtWon(d[k]):'')+'</div>';
     }
-    html+='</div></div>';
+    h+='</div></div>';
   }
-  html+='</div>';
-
+  h+='</div>';
   // CAGR
-  html+='<div style="padding-top:14px;border-top:1px solid #eee">';
-  html+='<div style="font-weight:700;font-size:14px;margin-bottom:10px">CAGR (2026 → 2030)</div>';
-  const items=[
-    {label:'Total Revenue',v0:yearData[2026].total,v4:yearData[2030].total,color:'#111'},
-    {label:'멘토링',v0:yearData[2026].mentoring,v4:yearData[2030].mentoring,color:'#b91c1c'},
-    {label:'AI',v0:yearData[2026].ai,v4:yearData[2030].ai,color:'#6d28d9'},
-    {label:'자료',v0:yearData[2026].mat,v4:yearData[2030].mat,color:'#047857'},
-    {label:'구독',v0:yearData[2026].sub,v4:yearData[2030].sub,color:'#1d4ed8'}
-  ];
-  for(const it of items){
-    let cagr=it.v0>0?Math.pow(it.v4/it.v0,1/4)-1:0;
-    const pct=(cagr*100).toFixed(1);
-    const arrow=cagr>=0?'▲':'▼';
-    const clr=cagr>=0?'#059669':'#dc2626';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #f5f5f5">';
-    html+='<span style="color:'+it.color+';font-weight:500">'+it.label+'</span>';
-    html+='<span style="font-weight:700;color:'+clr+'">'+arrow+' '+pct+'%</span>';
-    html+='</div>';
+  h+='<div style="padding-top:12px;border-top:1px solid var(--border)">';
+  h+='<div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--text)">CAGR (2026 → 2030)</div>';
+  var items=[
+    {l:'Total Revenue',c:'var(--text)',v0:yd[2026].total,v4:yd[2030].total},
+    {l:'멘토링',c:'var(--c-ment)',v0:yd[2026].mentoring,v4:yd[2030].mentoring},
+    {l:'AI',c:'var(--c-ai)',v0:yd[2026].ai,v4:yd[2030].ai},
+    {l:'자료',c:'var(--c-mat)',v0:yd[2026].mat,v4:yd[2030].mat},
+    {l:'구독',c:'var(--c-sub)',v0:yd[2026].sub,v4:yd[2030].sub}];
+  for(var i=0;i<items.length;i++){
+    var it=items[i],cagr=it.v0>0?Math.pow(it.v4/it.v0,1/4)-1:0;
+    var pct=(cagr*100).toFixed(1),clr=cagr>=0?'var(--green)':'var(--red)',arr=cagr>=0?'▲':'▼';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)">';
+    h+='<span style="color:'+it.c+';font-weight:500">'+it.l+'</span>';
+    h+='<span style="font-weight:700;color:'+clr+'">'+arr+' '+pct+'%</span>';
+    h+='</div>';
   }
-  html+='</div>';
-
-  document.getElementById('sideBody').innerHTML=html;
+  h+='</div>';
+  document.getElementById('SB').innerHTML=h;
 }
 
-// ========== INTERACTIONS ==========
-function toggleNode(id){
-  if(expandedNodes.has(id))expandedNodes.delete(id);
-  else expandedNodes.add(id);
-  renderAll(true);
-}
-function recalcAndRender(){computed=calcAll(currentYear);renderAll(false);}
+// ========== INTERACT ==========
+function tog(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);render();}
+function reCalc(){computed=calcAll(currentYear);render();}
 
 // ========== PAN & ZOOM ==========
-let panX=0,panY=0,zoom=1,isPanning=false,spx,spy,smx,smy;
-function initPanZoom(){
-  const wrap=document.getElementById('canvas-wrap');
-  const canvas=document.getElementById('canvas');
-  wrap.addEventListener('mousedown',function(e){
-    if(e.target.closest('.pill')||e.target.closest('.op-circle')||e.target.closest('.side-toggle'))return;
-    isPanning=true;spx=panX;spy=panY;smx=e.clientX;smy=e.clientY;
-    wrap.classList.add('dragging');e.preventDefault();
-  });
-  window.addEventListener('mousemove',function(e){
-    if(!isPanning)return;
-    panX=spx+(e.clientX-smx);panY=spy+(e.clientY-smy);
-    canvas.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
-  });
-  window.addEventListener('mouseup',function(){isPanning=false;wrap.classList.remove('dragging');});
-  wrap.addEventListener('wheel',function(e){
-    e.preventDefault();
-    const d=e.deltaY>0?0.92:1.08;
-    const nz=Math.max(0.2,Math.min(3,zoom*d));
-    const r=wrap.getBoundingClientRect();
-    const mx=e.clientX-r.left,my=e.clientY-r.top;
-    panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;
-    canvas.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
-  },{passive:false});
-  document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+var px=0,py=0,zm=1,drag=false,sx,sy,mx,my;
+function initPZ(){
+  var w=document.getElementById('cw'),cv=document.getElementById('cv');
+  w.addEventListener('mousedown',function(e){
+    if(e.target.closest('.p')||e.target.closest('.op')||e.target.closest('.spbtn'))return;
+    drag=true;sx=px;sy=py;mx=e.clientX;my=e.clientY;w.classList.add('drag');e.preventDefault();});
+  window.addEventListener('mousemove',function(e){if(!drag)return;px=sx+(e.clientX-mx);py=sy+(e.clientY-my);cv.style.transform='translate('+px+'px,'+py+'px) scale('+zm+')';});
+  window.addEventListener('mouseup',function(){drag=false;document.getElementById('cw').classList.remove('drag');});
+  w.addEventListener('wheel',function(e){
+    e.preventDefault();var d=e.deltaY>0?.92:1.08,nz=Math.max(.2,Math.min(3,zm*d));
+    var r=w.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top;
+    px=cx-(cx-px)*(nz/zm);py=cy-(cy-py)*(nz/zm);zm=nz;
+    cv.style.transform='translate('+px+'px,'+py+'px) scale('+zm+')';},{passive:false});
+  document.getElementById('MO').addEventListener('click',function(e){if(e.target===this)closeMo();});
 }
 
 // ========== INIT ==========
 computed=calcAll(currentYear);
-renderAll(false);
-initPanZoom();
-toggleSidePanel();
+render();
+initPZ();
+toggleSP();
 
 </script>
 </body>
