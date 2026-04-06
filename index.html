@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relay 매출 Driver Tree</title>
+<title>Relay Driver Tree</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI',-apple-system,sans-serif; background:#f7f8fa; color:#333; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
@@ -84,6 +84,8 @@ body { font-family:'Segoe UI',-apple-system,sans-serif; background:#f7f8fa; colo
 .modal th { background:#f8f8f8; font-weight:600; }
 .modal input[type=number] { width:80px; padding:3px 6px; border:1px solid #ddd; border-radius:4px; font-size:12px; }
 .modal .close-btn { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
+
+.pill { transition: left 0.4s ease, top 0.4s ease, opacity 0.4s ease, transform 0.25s ease; }
 
 </style>
 </head>
@@ -270,9 +272,9 @@ function buildTree() {
   function n(id,label,type,unit,opts){return Object.assign({id,label,type,unit,children:[],op:null,color:null},opts);}
 
   const enrolled = n('enrolled','가입 멘티','calc','명',{
-    value:c.totalEnrolled, formula:'TAM x 인지율 x 가입전환율', op:'x', segData:{calc:'enrolled'},
+    value:c.totalEnrolled, op:'x', segData:{calc:'enrolled'},
     children:[
-      n('tam','TAM','calc','명',{value:c.totalTAM, formula:'지원인원 / 중복배수', op:'÷', segData:{calc:'tam'},
+      n('tam','TAM','calc','명',{value:c.totalTAM, op:'÷', segData:{calc:'tam'},
         children:[
           n('applicants','지원인원','data','명',{dataKey:'S1.applicants', segData:{data:'applicants',source:'S1'}}),
           n('dedup','중복배수','assumption','배',{dataKey:'S1.dedup', segData:{data:'dedup',source:'S1'}, segEditable:true})
@@ -282,14 +284,14 @@ function buildTree() {
     ]});
 
   const active = n('active','활성 멘티','calc','명',{
-    value:c.totalActive, formula:'가입멘티 x 활성화율', op:'x', segData:{calc:'active'},
+    value:c.totalActive, op:'x', segData:{calc:'active'},
     children:[
       enrolled,
       n('activation','활성화율','assumption','%',{dataKey:'S2.activation', segData:{data:'activation',source:'S2'}, segEditable:true})
     ]});
 
   return n('total','Total Revenue','calc','백만₩',{
-    value:c.totalRevenue, op:'+', color:'#1e293b', segData:null,
+    value:c.totalRevenue, op:'+', color:'#1e293b',
     children:[
       n('mentoring','멘토링 매출','calc','백만₩',{
         value:c.totalMentoring, op:'x', color:'#b91c1c', colorClass:'c-mentoring',
@@ -337,13 +339,13 @@ function buildTree() {
                     value:c.totalMatBuyers, op:'x', segData:{calc:'matBuyers'},
                     children:[
                       n('enrolled_ref3','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
-                      n('matPurchaseRate','구매율','assumption','%',{dataKey:'S2.matPurchaseRate', segData:{data:'matPurchaseRate',source:'S2'}, segEditable:true})
+                      n('matRate','구매율','assumption','%',{dataKey:'S2.matPurchaseRate', segData:{data:'matPurchaseRate',source:'S2'}, segEditable:true})
                     ]}),
-                  n('matPurchaseFreq','인당건수','assumption','건',{dataKey:'S2.matPurchaseFreq', segData:{data:'matPurchaseFreq',source:'S2'}, segEditable:true})
+                  n('matFreq','인당건수','assumption','건',{dataKey:'S2.matPurchaseFreq', segData:{data:'matPurchaseFreq',source:'S2'}, segEditable:true})
                 ]}),
               n('matPrice','자료 단가','assumption','₩K',{dataKey:'S3.matPrice', segData:{data:'matPrice',source:'S3'}, segEditable:true})
             ]}),
-          n('matTakeNode','Take Rate','assumption','%',{isSingle:true, value:S3.matTake[currentYear]||0.3})
+          n('matTake','Take Rate','assumption','%',{isSingle:true, value:S3.matTake[currentYear]||0.3})
         ]}),
       n('sub','구독 매출','calc','백만₩',{
         value:c.totalSub, op:'x', color:'#1d4ed8', colorClass:'c-sub',
@@ -355,9 +357,9 @@ function buildTree() {
                 value:c.totalSubscribers, op:'x', segData:{calc:'subscribers'},
                 children:[
                   n('enrolled_ref4','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
-                  n('subConversion','구독전환율','assumption','%',{dataKey:'S2.subConversion', segData:{data:'subConversion',source:'S2'}, segEditable:true})
+                  n('subConv','구독전환율','assumption','%',{dataKey:'S2.subConversion', segData:{data:'subConversion',source:'S2'}, segEditable:true})
                 ]}),
-              n('subDuration','구독기간','assumption','개월',{dataKey:'S2.subDuration', segData:{data:'subDuration',source:'S2'}, segEditable:true})
+              n('subDur','구독기간','assumption','개월',{dataKey:'S2.subDuration', segData:{data:'subDuration',source:'S2'}, segEditable:true})
             ]}),
           n('subPrice','월구독료','assumption','₩K',{dataKey:'S3.subPrice', segData:{data:'subPrice',source:'S3'}, segEditable:true})
         ]})
@@ -365,8 +367,10 @@ function buildTree() {
 }
 
 // ========== LAYOUT ==========
-const CARD_W=160, CARD_H=44, LEVEL_GAP=210, V_GAP=10;
+const CARD_H=46, LEVEL_GAP=220, V_GAP=12;
 const expandedNodes = new Set(['total']);
+// Store previous positions for animation
+let prevPositions = {};
 
 function visKids(nd){
   if(!nd.children||!nd.children.length||nd.isRef) return [];
@@ -374,7 +378,7 @@ function visKids(nd){
 }
 
 function layoutTree(nd,depth,yStart){
-  nd.x=depth*LEVEL_GAP+40;
+  nd.x=depth*LEVEL_GAP+50;
   const kids=visKids(nd);
   if(!kids.length){ nd.y=yStart; nd._h=CARD_H+V_GAP; return nd._h; }
   let y=yStart,tot=0;
@@ -394,9 +398,9 @@ function formatVal(nd){
     const[s,k]=nd.dataKey.split('.');
     const obj=s==='S1'?S1:s==='S2'?S2:S3;
     if(!obj[k])return '0';
-    let sum=0,cnt=0;
-    for(const seg of SEGMENTS){const v=obj[k][seg]&&obj[k][seg][currentYear];if(v!==undefined){sum+=v;cnt++;}}
-    const avg=cnt>0?sum/cnt:0;
+    let sm=0,cnt=0;
+    for(const seg of SEGMENTS){const v=obj[k][seg]&&obj[k][seg][currentYear];if(v!==undefined){sm+=v;cnt++;}}
+    const avg=cnt>0?sm/cnt:0;
     return nd.unit==='%'?fmtPct(avg):fmtNum(avg);
   }
   return '';
@@ -406,70 +410,123 @@ function pillCls(nd){
   if(nd.isRef)return 'pill pill-ref';
   if(nd.type==='data')return 'pill pill-data';
   if(nd.type==='assumption')return 'pill pill-input';
-  let c='pill pill-calc';
-  if(nd.colorClass)c+=' '+nd.colorClass;
-  return c;
+  let c='pill pill-calc';if(nd.colorClass)c+=' '+nd.colorClass;return c;
 }
 
-// ========== RENDER ==========
-let editingNode=null;
-
-function renderAll(){
+// ========== 2-PASS RENDER: first place pills, then measure & draw lines ==========
+function renderAll(animate){
   const tree=buildTree();
   layoutTree(tree,0,50);
+
   const nodesDiv=document.getElementById('nodes');
   const svg=document.getElementById('lines');
-  let pills='',paths='',ops='';
 
-  function walk(nd){
+  // Collect all nodes flat
+  const allNodes=[];
+  function collect(nd){allNodes.push(nd);visKids(nd).forEach(collect);}
+  collect(tree);
+
+  // Build pills HTML
+  let pills='',ops='';
+  for(const nd of allNodes){
     const val=formatVal(nd);
     const exp=expandedNodes.has(nd.id);
     const hasK=nd.children&&nd.children.length>0&&!nd.isRef;
     const aCls=hasK?(exp?' expanded':' has-kids'):'';
+    const isInput=nd.type==='assumption'&&!nd.isRef;
+    const click=isInput
+      ?'onclick="event.stopPropagation();showModal(\x27'+nd.id+'\x27)"'
+      :'onclick="toggleNode(\x27'+nd.id+'\x27)"';
 
-    // Pill with click-to-edit for assumptions
-    const isEditable=nd.type==='assumption'&&!nd.isRef&&nd.segData;
-    const clickAction=isEditable
-      ? 'onclick="event.stopPropagation();startInlineEdit(\x27'+nd.id+'\x27)"'
-      : 'onclick="toggleNode(\x27'+nd.id+'\x27)"';
-    const segBtn=nd.segData&&!nd.isRef&&nd.type!=='assumption'
-      ? ' ondblclick="event.stopPropagation();showModal(\x27'+nd.id+'\x27)"':'';
+    // Animation: start from parent position or previous position
+    const prev=prevPositions[nd.id];
+    const startX=animate&&!prev?nd.x:nd.x;
+    const startY=animate&&!prev?nd.y:nd.y;
+    const opacity=animate&&!prev?'opacity:0;':'';
 
-    pills+='<div class="'+pillCls(nd)+aCls+'" style="left:'+nd.x+'px;top:'+nd.y+'px" '+clickAction+segBtn+' data-id="'+nd.id+'">';
+    pills+='<div class="'+pillCls(nd)+aCls+'" id="pill-'+nd.id+'" style="left:'+nd.x+'px;top:'+nd.y+'px;'+opacity+'" '+click+'>';
     pills+='<span class="p-name">'+nd.label+'</span>';
     pills+='<span class="p-val">'+val+'</span>';
-    if(isEditable)pills+='<span class="p-edit">click to edit</span>';
+    if(isInput)pills+='<span class="p-edit">click to edit</span>';
     pills+='</div>';
+  }
 
+  // Operator circles
+  for(const nd of allNodes){
     const kids=visKids(nd);
-    if(kids.length>0){
-      const x1=nd.x+CARD_W, y1=nd.y+CARD_H/2;
-      if(nd.op){
-        ops+='<div class="op-circle" style="left:'+(x1+12)+'px;top:'+(y1-12)+'px">'+nd.op+'</div>';
-      }
-      for(const kid of kids){
-        const x2=kid.x, y2=kid.y+CARD_H/2;
-        const sx=nd.op?x1+36:x1+4;
-        const cx=(sx+x2)/2;
-        paths+='<path d="M'+sx+','+y1+' C'+cx+','+y1+' '+cx+','+y2+' '+x2+','+y2+'"/>';
-        walk(kid);
-      }
+    if(kids.length>0&&nd.op){
+      const el=nd;
+      ops+='<div class="op-circle" id="op-'+nd.id+'" style="left:0;top:0" data-parent="'+nd.id+'">'+nd.op+'</div>';
     }
   }
-  walk(tree);
-  nodesDiv.innerHTML=pills+ops;
-  svg.innerHTML=paths;
 
-  // Size SVG
-  const ns=[];
-  (function c(nd){ns.push(nd);visKids(nd).forEach(c);})(tree);
-  const mx=Math.max(...ns.map(n=>n.x))+CARD_W+120;
-  const my=Math.max(...ns.map(n=>n.y))+CARD_H+120;
+  nodesDiv.innerHTML=pills+ops;
+
+  // Animate new pills in
+  if(animate){
+    requestAnimationFrame(function(){
+      for(const nd of allNodes){
+        const el=document.getElementById('pill-'+nd.id);
+        if(el)el.style.opacity='1';
+      }
+    });
+  }
+
+  // After DOM is rendered, measure actual pill widths and draw lines
+  requestAnimationFrame(function(){
+    drawLines(tree,allNodes,svg);
+    // Save positions for next render
+    prevPositions={};
+    for(const nd of allNodes) prevPositions[nd.id]={x:nd.x,y:nd.y};
+  });
+
+  // Size SVG generously
+  const mx=Math.max(...allNodes.map(n=>n.x))+300;
+  const my=Math.max(...allNodes.map(n=>n.y))+200;
   svg.setAttribute('width',mx);svg.setAttribute('height',my);
   svg.style.width=mx+'px';svg.style.height=my+'px';
 
   renderYearTabs();
   renderSidePanel();
+}
+
+function drawLines(tree, allNodes, svg){
+  let paths='';
+
+  for(const nd of allNodes){
+    const kids=visKids(nd);
+    if(kids.length===0) continue;
+
+    const parentEl=document.getElementById('pill-'+nd.id);
+    if(!parentEl) continue;
+    const pw=parentEl.offsetWidth||160;
+
+    // Parent right edge center
+    const x1=nd.x+pw;
+    const y1=nd.y+CARD_H/2;
+
+    // If operator exists, position it and start lines after it
+    let lineStartX=x1+4;
+    if(nd.op){
+      const opEl=document.getElementById('op-'+nd.id);
+      if(opEl){
+        opEl.style.left=(x1+8)+'px';
+        opEl.style.top=(y1-12)+'px';
+      }
+      lineStartX=x1+36;
+    }
+
+    for(const kid of kids){
+      const kidEl=document.getElementById('pill-'+kid.id);
+      const kw=kidEl?kidEl.offsetWidth:160;
+      const x2=kid.x;
+      const y2=kid.y+CARD_H/2;
+      const cx1=lineStartX+(x2-lineStartX)*0.4;
+      const cx2=lineStartX+(x2-lineStartX)*0.6;
+      paths+='<path d="M'+lineStartX+','+y1+' C'+cx1+','+y1+' '+cx2+','+y2+' '+x2+','+y2+'"/>';
+    }
+  }
+  svg.innerHTML=paths;
 }
 
 function renderYearTabs(){
@@ -483,16 +540,6 @@ function renderYearTabs(){
   }
 }
 
-// ========== INLINE EDIT ==========
-function startInlineEdit(nodeId){
-  const tree=buildTree();
-  function find(nd){if(nd.id===nodeId)return nd;for(const k of(nd.children||[])){const r=find(k);if(r)return r;}return null;}
-  const node=find(tree);
-  if(!node||!node.segData)return;
-  // Open modal with segment table for editing
-  showModal(nodeId);
-}
-
 // ========== MODAL ==========
 let currentModalId=null;
 function showModal(nodeId){
@@ -501,8 +548,7 @@ function showModal(nodeId){
   function find(nd){if(nd.id===nodeId)return nd;for(const k of(nd.children||[])){const r=find(k);if(r)return r;}return null;}
   const node=find(tree);
   if(!node||!node.segData)return;
-  const yr=currentYear;
-  const sd=node.segData;
+  const yr=currentYear, sd=node.segData;
   let rows='';
   for(const seg of SEGMENTS){
     if(sd.calc){
@@ -524,6 +570,7 @@ function showModal(nodeId){
   document.getElementById('modalContent').innerHTML=
     '<button class="close-btn" onclick="closeModal()">&times;</button>'+
     '<h3>'+node.label+' — '+currentYear+'년 세그먼트별</h3>'+
+    '<p style="font-size:11px;color:#999;margin-bottom:8px">값을 수정하면 트리 전체가 즉시 재계산됩니다</p>'+
     '<table><thead><tr><th>세그먼트</th><th style="text-align:right">값 ('+node.unit+')</th></tr></thead><tbody>'+rows+'</tbody></table>';
   document.getElementById('modalOverlay').classList.add('show');
 }
@@ -533,16 +580,18 @@ window.onSegChange=function(input){
   const src=input.dataset.source==='S1'?S1:input.dataset.source==='S2'?S2:S3;
   let val=parseFloat(input.value);if(isNaN(val))return;
   if(input.dataset.unit==='%')val=val/100;
-  if(!src[input.dataset.key])src[input.dataset.key]={};
-  if(!src[input.dataset.key][input.dataset.seg])src[input.dataset.key][input.dataset.seg]={};
-  src[input.dataset.key][input.dataset.seg][currentYear]=val;
+  const key=input.dataset.key, seg=input.dataset.seg;
+  if(!src[key])src[key]={};
+  if(!src[key][seg])src[key][seg]={};
+  src[key][seg][currentYear]=val;
+  // Recalc FIRST, then re-render tree, then re-open modal
   computed=calcAll(currentYear);
-  renderAll();
-  // Re-open modal with updated values
-  if(currentModalId) showModal(currentModalId);
+  renderAll(false);
+  // Re-open modal with fresh data after render
+  setTimeout(function(){ if(currentModalId) showModal(currentModalId); }, 50);
 };
 
-// ========== SIDE PANEL: Stacked Bar Chart + CAGR ==========
+// ========== SIDE PANEL ==========
 let sidePanelOpen=false;
 function toggleSidePanel(){
   sidePanelOpen=!sidePanelOpen;
@@ -554,8 +603,6 @@ function renderSidePanel(){
   if(!sidePanelOpen)return;
   const colors={mentoring:'#b91c1c',ai:'#6d28d9',mat:'#047857',sub:'#1d4ed8'};
   const labels={mentoring:'멘토링',ai:'AI',mat:'자료',sub:'구독'};
-
-  // Calc all years
   const yearData={};
   for(const yr of YEARS){
     const c=calcAll(yr);
@@ -563,46 +610,45 @@ function renderSidePanel(){
   }
   const maxTotal=Math.max(...YEARS.map(y=>yearData[y].total));
 
-  let html='<div style="margin-bottom:16px">';
-  // Legend
-  html+='<div style="display:flex;gap:10px;margin-bottom:12px;font-size:11px">';
-  for(const k of ['mentoring','ai','mat','sub']){
-    html+='<div style="display:flex;align-items:center;gap:3px"><div style="width:10px;height:10px;border-radius:2px;background:'+colors[k]+'"></div>'+labels[k]+'</div>';
-  }
+  let html='<div style="margin-bottom:20px">';
+  html+='<div style="display:flex;gap:12px;margin-bottom:14px;font-size:11px;flex-wrap:wrap">';
+  for(const k of['mentoring','ai','mat','sub'])
+    html+='<div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:3px;background:'+colors[k]+'"></div>'+labels[k]+'</div>';
   html+='</div>';
 
-  // Bars
   for(const yr of YEARS){
     const d=yearData[yr];
-    const pct=maxTotal>0?(d.total/maxTotal*100):0;
-    html+='<div class="chart-bar-group">';
-    html+='<div class="chart-label"><span>'+yr+'</span><span class="yr-val">'+fmtWon(d.total)+'</span></div>';
-    html+='<div class="chart-bar-wrap" style="width:'+Math.max(pct,5)+'%">';
-    for(const k of ['mentoring','ai','mat','sub']){
-      const segPct=d.total>0?(d[k]/d.total*100):25;
-      html+='<div class="chart-seg" style="width:'+segPct+'%;background:'+colors[k]+'">'+(segPct>8?fmtWon(d[k]):'')+'</div>';
+    html+='<div style="margin-bottom:12px">';
+    html+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:3px"><span>'+yr+'</span><span style="color:#2563eb">'+fmtWon(d.total)+'</span></div>';
+    html+='<div style="display:flex;height:32px;border-radius:6px;overflow:hidden;background:#f0f0f0;width:100%">';
+    for(const k of['mentoring','ai','mat','sub']){
+      const pct=d.total>0?(d[k]/d.total*100):25;
+      const w=pct;
+      html+='<div style="width:'+w+'%;height:100%;background:'+colors[k]+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap;padding:0 4px">'+(w>10?fmtWon(d[k]):'')+'</div>';
     }
     html+='</div></div>';
   }
   html+='</div>';
 
-  // CAGR section
-  html+='<div class="cagr-section">';
-  html+='<div style="font-weight:700;font-size:13px;margin-bottom:8px">CAGR (2026→2030)</div>';
+  // CAGR
+  html+='<div style="padding-top:14px;border-top:1px solid #eee">';
+  html+='<div style="font-weight:700;font-size:14px;margin-bottom:10px">CAGR (2026 → 2030)</div>';
   const items=[
-    {label:'Total Revenue', v0:yearData[2026].total, v4:yearData[2030].total},
-    {label:'멘토링', v0:yearData[2026].mentoring, v4:yearData[2030].mentoring},
-    {label:'AI', v0:yearData[2026].ai, v4:yearData[2030].ai},
-    {label:'자료', v0:yearData[2026].mat, v4:yearData[2030].mat},
-    {label:'구독', v0:yearData[2026].sub, v4:yearData[2030].sub}
+    {label:'Total Revenue',v0:yearData[2026].total,v4:yearData[2030].total,color:'#111'},
+    {label:'멘토링',v0:yearData[2026].mentoring,v4:yearData[2030].mentoring,color:'#b91c1c'},
+    {label:'AI',v0:yearData[2026].ai,v4:yearData[2030].ai,color:'#6d28d9'},
+    {label:'자료',v0:yearData[2026].mat,v4:yearData[2030].mat,color:'#047857'},
+    {label:'구독',v0:yearData[2026].sub,v4:yearData[2030].sub,color:'#1d4ed8'}
   ];
   for(const it of items){
-    let cagr=0;
-    if(it.v0>0) cagr=Math.pow(it.v4/it.v0,1/4)-1;
+    let cagr=it.v0>0?Math.pow(it.v4/it.v0,1/4)-1:0;
     const pct=(cagr*100).toFixed(1);
-    const cls=cagr>=0?'positive':'negative';
     const arrow=cagr>=0?'▲':'▼';
-    html+='<div class="cagr-row"><span class="cagr-label">'+it.label+'</span><span class="cagr-val '+cls+'"><span class="cagr-arrow">'+arrow+'</span>'+pct+'%</span></div>';
+    const clr=cagr>=0?'#059669':'#dc2626';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #f5f5f5">';
+    html+='<span style="color:'+it.color+';font-weight:500">'+it.label+'</span>';
+    html+='<span style="font-weight:700;color:'+clr+'">'+arrow+' '+pct+'%</span>';
+    html+='</div>';
   }
   html+='</div>';
 
@@ -613,9 +659,9 @@ function renderSidePanel(){
 function toggleNode(id){
   if(expandedNodes.has(id))expandedNodes.delete(id);
   else expandedNodes.add(id);
-  renderAll();
+  renderAll(true);
 }
-function recalcAndRender(){computed=calcAll(currentYear);renderAll();}
+function recalcAndRender(){computed=calcAll(currentYear);renderAll(false);}
 
 // ========== PAN & ZOOM ==========
 let panX=0,panY=0,zoom=1,isPanning=false,spx,spy,smx,smy;
@@ -636,7 +682,7 @@ function initPanZoom(){
   wrap.addEventListener('wheel',function(e){
     e.preventDefault();
     const d=e.deltaY>0?0.92:1.08;
-    const nz=Math.max(0.25,Math.min(3,zoom*d));
+    const nz=Math.max(0.2,Math.min(3,zoom*d));
     const r=wrap.getBoundingClientRect();
     const mx=e.clientX-r.left,my=e.clientY-r.top;
     panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;
@@ -647,9 +693,8 @@ function initPanZoom(){
 
 // ========== INIT ==========
 computed=calcAll(currentYear);
-renderAll();
+renderAll(false);
 initPanZoom();
-// Auto-open side panel
 toggleSidePanel();
 
 </script>
