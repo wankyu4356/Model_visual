@@ -511,7 +511,7 @@ function renderNode(node, depth) {
   const refStyle = node.isRef ? 'opacity:0.6;font-style:italic;' : '';
 
   let html = '<div class="tree-node" id="node-' + node.id + '">';
-  html += '<div class="node-row" style="' + colorStyle + refStyle + '" onclick="toggleNode('' + node.id + '')">';
+  html += '<div class="node-row" style="' + colorStyle + refStyle + '" onclick="toggleNode(\x27' + node.id + '\x27)">';
   html += '<span class="expand-btn ' + (hasChildren ? (isExpanded ? 'expanded' : '') : 'leaf') + '">&#9654;</span>';
   html += '<span class="node-badge ' + badgeClass + '">' + badgeText + '</span>';
   html += '<span class="node-label">' + node.label + formulaText + '</span>';
@@ -519,7 +519,7 @@ function renderNode(node, depth) {
   html += '<span class="node-unit">' + node.unit + '</span>';
   
   if (node.segData && !node.isRef) {
-    html += '<span style="font-size:11px;color:#6e7681;cursor:pointer;padding:2px 6px;border-radius:4px;background:#161b22" onclick="event.stopPropagation();toggleSegments('' + node.id + '')">' + (showSegs ? '▲ 접기' : '▼ 세그먼트') + '</span>';
+    html += '<span style="font-size:11px;color:#6e7681;cursor:pointer;padding:2px 6px;border-radius:4px;background:#161b22" onclick="event.stopPropagation();toggleSegments(\x27' + node.id + '\x27)">' + (showSegs ? '▲ 접기' : '▼ 세그먼트') + '</span>';
   }
   html += '</div>';
 
