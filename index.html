@@ -6,64 +6,81 @@
 <title>Relay 매출 Driver Tree</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Segoe UI',-apple-system,sans-serif; background:#f5f5f5; color:#333; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+body { font-family:'Segoe UI',-apple-system,sans-serif; background:#f7f8fa; color:#333; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
 
-.header { background:#fff; padding:12px 24px; border-bottom:1px solid #ddd; display:flex; align-items:center; gap:20px; flex-shrink:0; z-index:10; }
-.header h1 { font-size:18px; font-weight:700; color:#222; white-space:nowrap; }
+.header { background:#fff; padding:10px 20px; border-bottom:1px solid #e0e0e0; display:flex; align-items:center; gap:16px; flex-shrink:0; z-index:20; }
+.header h1 { font-size:17px; font-weight:700; color:#222; white-space:nowrap; }
 .header h1 span { color:#2563eb; }
-
-.year-tabs { display:flex; gap:3px; background:#f0f0f0; border-radius:6px; padding:2px; }
-.year-tab { padding:5px 14px; border-radius:5px; cursor:pointer; font-size:13px; font-weight:500; color:#666; border:none; background:transparent; }
-.year-tab:hover { color:#333; background:#e0e0e0; }
+.year-tabs { display:flex; gap:2px; background:#f0f0f0; border-radius:8px; padding:3px; }
+.year-tab { padding:6px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; color:#888; border:none; background:transparent; transition:all .15s; }
+.year-tab:hover { color:#333; background:#e8e8e8; }
 .year-tab.active { background:#2563eb; color:#fff; }
 
-.summary-bar { display:flex; gap:8px; padding:8px 24px; background:#fff; border-bottom:1px solid #eee; flex-shrink:0; }
-.summary-card { padding:6px 14px; border-radius:8px; border:1px solid #e0e0e0; background:#fafafa; }
-.summary-card .label { font-size:10px; color:#888; text-transform:uppercase; }
-.summary-card .value { font-size:16px; font-weight:700; }
-.sc-total .value { color:#111; }
-.sc-mentoring .value { color:#dc2626; }
-.sc-ai .value { color:#7c3aed; }
-.sc-mat .value { color:#059669; }
-.sc-sub .value { color:#2563eb; }
+.main-area { flex:1; display:flex; overflow:hidden; }
 
-.legend { display:flex; gap:16px; padding:6px 24px; background:#fff; border-bottom:1px solid #eee; font-size:11px; color:#888; flex-shrink:0; }
-.legend-item { display:flex; align-items:center; gap:4px; }
-.legend-dot { width:10px; height:10px; border-radius:50%; }
-
-#canvas-wrap { flex:1; overflow:hidden; position:relative; cursor:grab; }
+#canvas-wrap { flex:1; overflow:hidden; position:relative; cursor:grab; background:#f7f8fa; }
 #canvas-wrap.dragging { cursor:grabbing; }
 #canvas { position:absolute; transform-origin:0 0; }
-
 #lines { position:absolute; top:0; left:0; pointer-events:none; }
-#lines path { fill:none; stroke:#bbb; stroke-width:1.5; stroke-dasharray:6,3; }
+#lines path { fill:none; stroke:#b0b8c4; stroke-width:2; }
+#nodes { position:absolute; top:0; left:0; }
 
-.pill { position:absolute; display:flex; align-items:center; gap:6px; padding:6px 16px; border-radius:999px; font-size:12px; cursor:pointer; white-space:nowrap; transition:transform 0.3s ease, opacity 0.3s ease; box-shadow:0 1px 4px rgba(0,0,0,0.1); user-select:none; }
-.pill:hover { filter:brightness(1.1); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
-.pill .pill-label { font-weight:600; }
-.pill .pill-value { font-weight:400; opacity:0.9; }
-.pill .pill-edit { font-size:10px; opacity:0.5; margin-left:2px; }
-.pill.has-children::after { content:''; position:absolute; right:8px; top:50%; transform:translateY(-50%); width:0; height:0; border-left:4px solid currentColor; border-top:3px solid transparent; border-bottom:3px solid transparent; opacity:0.4; }
-.pill.expanded::after { opacity:0; }
+.pill { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 18px; border-radius:999px; font-size:12px; cursor:pointer; white-space:nowrap; transition:all 0.25s ease; box-shadow:0 2px 6px rgba(0,0,0,0.08); user-select:none; min-width:120px; text-align:center; }
+.pill:hover { box-shadow:0 3px 12px rgba(0,0,0,0.15); transform:scale(1.03); z-index:5; }
+.pill .p-name { font-weight:600; font-size:11px; line-height:1.3; }
+.pill .p-val { font-weight:700; font-size:13px; line-height:1.3; }
+.pill .p-edit { font-size:9px; opacity:0.5; }
+.pill.has-kids::after { content:'\25B6'; position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:8px; opacity:0.3; }
+.pill.expanded::after { display:none; }
 
-.pill-calc { background:#1e293b; color:#f8fafc; }
-.pill-calc.mentoring { background:#991b1b; color:#fecaca; }
-.pill-calc.ai { background:#5b21b6; color:#ede9fe; }
-.pill-calc.mat { background:#065f46; color:#d1fae5; }
-.pill-calc.sub { background:#1e40af; color:#dbeafe; }
-.pill-data { background:#e2e8f0; color:#334155; border:1px solid #94a3b8; }
-.pill-input { background:#fffbeb; color:#92400e; border:1.5px dashed #f59e0b; }
-.pill-input:hover { background:#fef3c7; }
-.pill-ref { background:#f1f5f9; color:#94a3b8; border:1px solid #cbd5e1; font-style:italic; opacity:0.7; }
+.pill-calc { background:#1e293b; color:#f1f5f9; }
+.pill-calc.c-mentoring { background:#b91c1c; color:#fee2e2; }
+.pill-calc.c-ai { background:#6d28d9; color:#ede9fe; }
+.pill-calc.c-mat { background:#047857; color:#d1fae5; }
+.pill-calc.c-sub { background:#1d4ed8; color:#dbeafe; }
+.pill-data { background:#e2e8f0; color:#1e293b; border:1.5px solid #94a3b8; }
+.pill-input { background:#fef9ee; color:#78350f; border:2px dashed #f59e0b; }
+.pill-input:hover { background:#fef3c7; border-color:#d97706; }
+.pill-ref { background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; opacity:0.6; font-style:italic; }
 
-.op-circle { position:absolute; width:22px; height:22px; border-radius:50%; background:#374151; color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:2; }
+.op-circle { position:absolute; width:24px; height:24px; border-radius:50%; background:#475569; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:3; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+
+.inline-input { width:60px; background:rgba(255,255,255,0.9); border:1px solid #f59e0b; border-radius:4px; padding:2px 4px; font-size:12px; font-weight:600; text-align:center; color:#78350f; outline:none; }
+
+/* Side Panel */
+.side-panel { width:0; overflow:hidden; background:#fff; border-left:1px solid #e0e0e0; transition:width .3s ease; flex-shrink:0; display:flex; flex-direction:column; }
+.side-panel.open { width:340px; }
+.side-toggle { position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:15; background:#fff; border:1px solid #ddd; border-right:none; border-radius:8px 0 0 8px; padding:8px 4px; cursor:pointer; font-size:14px; box-shadow:-2px 0 6px rgba(0,0,0,0.06); }
+.side-toggle:hover { background:#f0f0f0; }
+.side-header { padding:14px 16px; border-bottom:1px solid #eee; font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+.side-header button { background:none; border:none; font-size:18px; cursor:pointer; color:#999; }
+.side-body { flex:1; overflow-y:auto; padding:16px; }
+
+.chart-bar-group { margin-bottom:4px; }
+.chart-bar-wrap { display:flex; height:28px; border-radius:4px; overflow:hidden; background:#f0f0f0; }
+.chart-seg { height:100%; transition:width .3s ease; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:600; color:#fff; min-width:0; overflow:hidden; }
+.chart-label { font-size:12px; font-weight:600; margin-bottom:2px; display:flex; justify-content:space-between; }
+.chart-label .yr-val { color:#2563eb; }
+
+.cagr-section { margin-top:20px; padding-top:16px; border-top:1px solid #eee; }
+.cagr-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:13px; }
+.cagr-row .cagr-label { color:#555; }
+.cagr-row .cagr-val { font-weight:700; display:flex; align-items:center; gap:4px; }
+.cagr-row .cagr-val.positive { color:#059669; }
+.cagr-row .cagr-val.negative { color:#dc2626; }
+.cagr-arrow { font-size:10px; }
+
+.legend-bar { display:flex; gap:12px; padding:6px 20px; background:#fff; border-bottom:1px solid #eee; font-size:10px; color:#999; flex-shrink:0; align-items:center; }
+.legend-bar .li { display:flex; align-items:center; gap:3px; }
+.legend-bar .ld { width:8px; height:8px; border-radius:50%; }
+.legend-bar .hint { margin-left:auto; font-size:10px; color:#bbb; }
 
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; }
 .modal-overlay.show { display:flex; }
 .modal { background:#fff; border-radius:12px; padding:20px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
-.modal h3 { font-size:16px; margin-bottom:12px; }
+.modal h3 { font-size:15px; margin-bottom:12px; }
 .modal table { width:100%; border-collapse:collapse; font-size:12px; }
-.modal th,.modal td { padding:6px 10px; border-bottom:1px solid #eee; text-align:left; }
+.modal th,.modal td { padding:5px 8px; border-bottom:1px solid #f0f0f0; text-align:left; }
 .modal th { background:#f8f8f8; font-weight:600; }
 .modal input[type=number] { width:80px; padding:3px 6px; border:1px solid #ddd; border-radius:4px; font-size:12px; }
 .modal .close-btn { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
@@ -74,19 +91,27 @@ body { font-family:'Segoe UI',-apple-system,sans-serif; background:#f5f5f5; colo
 <div class="header">
   <h1>Relay <span>매출 Driver Tree</span></h1>
   <div class="year-tabs" id="yearTabs"></div>
-  <div style="flex:1"></div>
-  <div class="summary-bar" id="summaryBar"></div>
 </div>
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#e2e8f0;border:1px solid #94a3b8"></div> 실제 데이터</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#fffbeb;border:1.5px dashed #f59e0b"></div> 가정치 (클릭 편집)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1e293b"></div> 계산값</div>
-  <span style="margin-left:auto;font-size:11px;color:#aaa">마우스 드래그: 이동 | 스크롤: 확대/축소 | 더블클릭: 세그먼트</span>
+<div class="legend-bar">
+  <div class="li"><div class="ld" style="background:#e2e8f0;border:1px solid #94a3b8"></div> 실제 데이터</div>
+  <div class="li"><div class="ld" style="background:#fef9ee;border:1.5px dashed #f59e0b"></div> 가정치 (클릭 편집)</div>
+  <div class="li"><div class="ld" style="background:#1e293b"></div> 계산값</div>
+  <span class="hint">드래그:이동 | 스크롤:확대축소 | 노란pill클릭:직접편집</span>
 </div>
-<div id="canvas-wrap">
-  <div id="canvas">
-    <svg id="lines"></svg>
-    <div id="nodes"></div>
+<div class="main-area">
+  <div id="canvas-wrap">
+    <div id="canvas">
+      <svg id="lines"></svg>
+      <div id="nodes"></div>
+    </div>
+    <button class="side-toggle" id="sideToggle" onclick="toggleSidePanel()">📊</button>
+  </div>
+  <div class="side-panel" id="sidePanel">
+    <div class="side-header">
+      <span>매출 추이 (2026-2030)</span>
+      <button onclick="toggleSidePanel()">&times;</button>
+    </div>
+    <div class="side-body" id="sideBody"></div>
   </div>
 </div>
 <div class="modal-overlay" id="modalOverlay">
@@ -242,415 +267,390 @@ function fmtNum(v) {
 function buildTree() {
   const yr = currentYear;
   const c = computed;
+  function n(id,label,type,unit,opts){return Object.assign({id,label,type,unit,children:[],op:null,color:null},opts);}
 
-  function n(id, label, type, unit, opts) {
-    return Object.assign({ id, label, type, unit, children: [], op: null, color: null }, opts);
-  }
+  const enrolled = n('enrolled','가입 멘티','calc','명',{
+    value:c.totalEnrolled, formula:'TAM x 인지율 x 가입전환율', op:'x', segData:{calc:'enrolled'},
+    children:[
+      n('tam','TAM','calc','명',{value:c.totalTAM, formula:'지원인원 / 중복배수', op:'÷', segData:{calc:'tam'},
+        children:[
+          n('applicants','지원인원','data','명',{dataKey:'S1.applicants', segData:{data:'applicants',source:'S1'}}),
+          n('dedup','중복배수','assumption','배',{dataKey:'S1.dedup', segData:{data:'dedup',source:'S1'}, segEditable:true})
+        ]}),
+      n('awareness','인지율','assumption','%',{dataKey:'S2.awareness', segData:{data:'awareness',source:'S2'}, segEditable:true}),
+      n('signup','가입전환율','assumption','%',{dataKey:'S2.signup', segData:{data:'signup',source:'S2'}, segEditable:true})
+    ]});
 
-  const enrolled = n('enrolled', '가입 멘티', 'calc', '명', {
-    value: c.totalEnrolled, formula: 'TAM × 인지율 × 가입전환율', op: '×',
-    children: [
-      n('tam', 'TAM (편입준비생)', 'calc', '명', {
-        value: c.totalTAM, formula: '지원인원 ÷ 중복배수', op: '÷',
-        children: [
-          n('applicants', '지원인원', 'data', '명', { dataKey: 'S1.applicants', segData: { data: 'applicants', source: 'S1' } }),
-          n('dedup', '중복지원배수', 'assumption', '배', { dataKey: 'S1.dedup', segData: { data: 'dedup', source: 'S1' }, segEditable: true })
-        ]
-      }),
-      n('awareness', '인지율', 'assumption', '%', { dataKey: 'S2.awareness', segData: { data: 'awareness', source: 'S2' }, segEditable: true }),
-      n('signup', '가입전환율', 'assumption', '%', { dataKey: 'S2.signup', segData: { data: 'signup', source: 'S2' }, segEditable: true })
-    ]
-  });
+  const active = n('active','활성 멘티','calc','명',{
+    value:c.totalActive, formula:'가입멘티 x 활성화율', op:'x', segData:{calc:'active'},
+    children:[
+      enrolled,
+      n('activation','활성화율','assumption','%',{dataKey:'S2.activation', segData:{data:'activation',source:'S2'}, segEditable:true})
+    ]});
 
-  const active = n('active', '활성 멘티', 'calc', '명', {
-    value: c.totalActive, formula: '가입멘티 × 활성화율', op: '×',
-    children: [
-      n('enrolled_ref', '가입 멘티', 'calc', '명', { value: c.totalEnrolled, isRef: true }),
-      n('activation', '활성화율', 'assumption', '%', { dataKey: 'S2.activation', segData: { data: 'activation', source: 'S2' }, segEditable: true })
-    ]
-  });
-
-  const root = n('total', 'Total Revenue', 'calc', '백만₩', {
-    value: c.totalRevenue, op: '+', color: '#1e293b',
-    children: [
-      n('mentoring', '멘토링 매출', 'calc', '백만₩', {
-        value: c.totalMentoring, formula: 'GMV × Take Rate', op: '×', color: '#991b1b', colorClass: 'mentoring',
-        children: [
-          n('mGMV', '멘토링 GMV', 'calc', '백만₩', {
-            value: c.totalMentoringGMV, formula: '거래건수 × 단가', op: '×',
-            children: [
-              n('mTxn', '거래 건수', 'calc', '건', {
-                value: c.totalTxnCount, formula: '활성멘티 × 거래횟수', op: '×',
-                children: [
+  return n('total','Total Revenue','calc','백만₩',{
+    value:c.totalRevenue, op:'+', color:'#1e293b', segData:null,
+    children:[
+      n('mentoring','멘토링 매출','calc','백만₩',{
+        value:c.totalMentoring, op:'x', color:'#b91c1c', colorClass:'c-mentoring',
+        children:[
+          n('mGMV','멘토링 GMV','calc','백만₩',{
+            value:c.totalMentoringGMV, op:'x',
+            children:[
+              n('mTxn','거래 건수','calc','건',{
+                value:c.totalTxnCount, op:'x', segData:{calc:'txnCount'},
+                children:[
                   active,
-                  n('txnFreq', '연간 거래횟수', 'assumption', '회', { dataKey: 'S2.txnFreq', segData: { data: 'txnFreq', source: 'S2' }, segEditable: true })
-                ]
-              }),
-              n('mPrice', '멘토링 단가', 'assumption', '₩K', { dataKey: 'S3.mentoringPrice', segData: { data: 'mentoringPrice', source: 'S3' }, segEditable: true })
-            ]
-          }),
-          n('mTake', 'Take Rate', 'assumption', '%', { dataKey: 'S3.mentoringTake', segData: { data: 'mentoringTake', source: 'S3' }, segEditable: true })
-        ]
-      }),
-      n('ai', 'AI 매출', 'calc', '백만₩', {
-        value: c.totalAI, formula: '이용건수 × 단가', op: '×', color: '#5b21b6', colorClass: 'ai',
-        children: [
-          n('aiTxn', 'AI 이용건수', 'calc', '건', {
-            value: c.totalAITxn, formula: '이용자 × 이용횟수', op: '×',
-            children: [
-              n('aiUsers', 'AI 이용자', 'calc', '명', {
-                value: c.totalAIUsers, formula: '가입멘티 × 노출률 × 전환율', op: '×',
-                children: [
-                  n('enrolled_ref2', '가입 멘티', 'calc', '명', { value: c.totalEnrolled, isRef: true }),
-                  n('aiExposure', 'AI 노출률', 'assumption', '%', { dataKey: 'S2.aiExposure', segData: { data: 'aiExposure', source: 'S2' }, segEditable: true }),
-                  n('aiConversion', 'AI 전환율', 'assumption', '%', { dataKey: 'S2.aiConversion', segData: { data: 'aiConversion', source: 'S2' }, segEditable: true })
-                ]
-              }),
-              n('aiUsageFreq', '인당 이용횟수', 'assumption', '회', { dataKey: 'S2.aiUsageFreq', segData: { data: 'aiUsageFreq', source: 'S2' }, segEditable: true })
-            ]
-          }),
-          n('aiPrice', 'AI 단가', 'assumption', '₩K', { dataKey: 'S3.aiPrice', segData: { data: 'aiPrice', source: 'S3' }, segEditable: true })
-        ]
-      }),
-      n('mat', '자료 매출', 'calc', '백만₩', {
-        value: c.totalMat, formula: 'GMV × Take Rate', op: '×', color: '#065f46', colorClass: 'mat',
-        children: [
-          n('matGMV', '자료 GMV', 'calc', '백만₩', {
-            value: c.totalMatGMV, formula: '구매건수 × 단가', op: '×',
-            children: [
-              n('matTxn', '구매 건수', 'calc', '건', {
-                value: c.totalMatTxn, formula: '구매자 × 인당건수', op: '×',
-                children: [
-                  n('matBuyers', '자료 구매자', 'calc', '명', {
-                    value: c.totalMatBuyers, formula: '가입멘티 × 구매율', op: '×',
-                    children: [
-                      n('enrolled_ref3', '가입 멘티', 'calc', '명', { value: c.totalEnrolled, isRef: true }),
-                      n('matPurchaseRate', '자료 구매율', 'assumption', '%', { dataKey: 'S2.matPurchaseRate', segData: { data: 'matPurchaseRate', source: 'S2' }, segEditable: true })
-                    ]
-                  }),
-                  n('matPurchaseFreq', '인당 구매건수', 'assumption', '건', { dataKey: 'S2.matPurchaseFreq', segData: { data: 'matPurchaseFreq', source: 'S2' }, segEditable: true })
-                ]
-              }),
-              n('matPrice', '자료 단가', 'assumption', '₩K', { dataKey: 'S3.matPrice', segData: { data: 'matPrice', source: 'S3' }, segEditable: true })
-            ]
-          }),
-          n('matTakeNode', 'Take Rate', 'assumption', '%', { isSingle: true, value: S3.matTake[currentYear] || 0.3 })
-        ]
-      }),
-      n('sub', '구독 매출', 'calc', '백만₩', {
-        value: c.totalSub, formula: '과금개월 × 월구독료', op: '×', color: '#1e40af', colorClass: 'sub',
-        children: [
-          n('subMonths', '총 과금개월', 'calc', '개월', {
-            value: c.totalSubMonths, formula: '구독자 × 구독기간', op: '×',
-            children: [
-              n('subscribers', '구독자', 'calc', '명', {
-                value: c.totalSubscribers, formula: '가입멘티 × 구독전환율', op: '×',
-                children: [
-                  n('enrolled_ref4', '가입 멘티', 'calc', '명', { value: c.totalEnrolled, isRef: true }),
-                  n('subConversion', '구독 전환율', 'assumption', '%', { dataKey: 'S2.subConversion', segData: { data: 'subConversion', source: 'S2' }, segEditable: true })
-                ]
-              }),
-              n('subDuration', '평균 구독기간', 'assumption', '개월', { dataKey: 'S2.subDuration', segData: { data: 'subDuration', source: 'S2' }, segEditable: true })
-            ]
-          }),
-          n('subPrice', '월 구독료', 'assumption', '₩K', { dataKey: 'S3.subPrice', segData: { data: 'subPrice', source: 'S3' }, segEditable: true })
-        ]
-      })
-    ]
-  });
-
-  // Insert enrolled as child of mentoring path
-  // enrolled is already referenced in active and ref nodes
-  // We need to place it in the tree - add it before active in mTxn
-  const mTxnNode = root.children[0].children[0].children[0]; // mentoring > mGMV > mTxn
-  mTxnNode.children[0] = active; // replace active reference
-
-  // Insert enrolled tree in active's children
-  active.children[0] = enrolled;
-
-  return root;
+                  n('txnFreq','거래횟수','assumption','회',{dataKey:'S2.txnFreq', segData:{data:'txnFreq',source:'S2'}, segEditable:true})
+                ]}),
+              n('mPrice','멘토링 단가','assumption','₩K',{dataKey:'S3.mentoringPrice', segData:{data:'mentoringPrice',source:'S3'}, segEditable:true})
+            ]}),
+          n('mTake','Take Rate','assumption','%',{dataKey:'S3.mentoringTake', segData:{data:'mentoringTake',source:'S3'}, segEditable:true})
+        ]}),
+      n('ai','AI 매출','calc','백만₩',{
+        value:c.totalAI, op:'x', color:'#6d28d9', colorClass:'c-ai',
+        children:[
+          n('aiTxn','AI 이용건수','calc','건',{
+            value:c.totalAITxn, op:'x', segData:{calc:'aiTxn'},
+            children:[
+              n('aiUsers','AI 이용자','calc','명',{
+                value:c.totalAIUsers, op:'x', segData:{calc:'aiUsers'},
+                children:[
+                  n('enrolled_ref2','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
+                  n('aiExposure','AI 노출률','assumption','%',{dataKey:'S2.aiExposure', segData:{data:'aiExposure',source:'S2'}, segEditable:true}),
+                  n('aiConversion','AI 전환율','assumption','%',{dataKey:'S2.aiConversion', segData:{data:'aiConversion',source:'S2'}, segEditable:true})
+                ]}),
+              n('aiUsageFreq','이용횟수','assumption','회',{dataKey:'S2.aiUsageFreq', segData:{data:'aiUsageFreq',source:'S2'}, segEditable:true})
+            ]}),
+          n('aiPrice','AI 단가','assumption','₩K',{dataKey:'S3.aiPrice', segData:{data:'aiPrice',source:'S3'}, segEditable:true})
+        ]}),
+      n('mat','자료 매출','calc','백만₩',{
+        value:c.totalMat, op:'x', color:'#047857', colorClass:'c-mat',
+        children:[
+          n('matGMV','자료 GMV','calc','백만₩',{
+            value:c.totalMatGMV, op:'x',
+            children:[
+              n('matTxn','구매건수','calc','건',{
+                value:c.totalMatTxn, op:'x', segData:{calc:'matTxn'},
+                children:[
+                  n('matBuyers','구매자','calc','명',{
+                    value:c.totalMatBuyers, op:'x', segData:{calc:'matBuyers'},
+                    children:[
+                      n('enrolled_ref3','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
+                      n('matPurchaseRate','구매율','assumption','%',{dataKey:'S2.matPurchaseRate', segData:{data:'matPurchaseRate',source:'S2'}, segEditable:true})
+                    ]}),
+                  n('matPurchaseFreq','인당건수','assumption','건',{dataKey:'S2.matPurchaseFreq', segData:{data:'matPurchaseFreq',source:'S2'}, segEditable:true})
+                ]}),
+              n('matPrice','자료 단가','assumption','₩K',{dataKey:'S3.matPrice', segData:{data:'matPrice',source:'S3'}, segEditable:true})
+            ]}),
+          n('matTakeNode','Take Rate','assumption','%',{isSingle:true, value:S3.matTake[currentYear]||0.3})
+        ]}),
+      n('sub','구독 매출','calc','백만₩',{
+        value:c.totalSub, op:'x', color:'#1d4ed8', colorClass:'c-sub',
+        children:[
+          n('subMonths','총 과금개월','calc','개월',{
+            value:c.totalSubMonths, op:'x', segData:{calc:'subMonths'},
+            children:[
+              n('subscribers','구독자','calc','명',{
+                value:c.totalSubscribers, op:'x', segData:{calc:'subscribers'},
+                children:[
+                  n('enrolled_ref4','가입 멘티','calc','명',{value:c.totalEnrolled, isRef:true}),
+                  n('subConversion','구독전환율','assumption','%',{dataKey:'S2.subConversion', segData:{data:'subConversion',source:'S2'}, segEditable:true})
+                ]}),
+              n('subDuration','구독기간','assumption','개월',{dataKey:'S2.subDuration', segData:{data:'subDuration',source:'S2'}, segEditable:true})
+            ]}),
+          n('subPrice','월구독료','assumption','₩K',{dataKey:'S3.subPrice', segData:{data:'subPrice',source:'S3'}, segEditable:true})
+        ]})
+    ]});
 }
 
-// ========== LAYOUT ENGINE ==========
-const CARD_W = 170, CARD_H = 36, LEVEL_GAP = 230, V_GAP = 14;
+// ========== LAYOUT ==========
+const CARD_W=160, CARD_H=44, LEVEL_GAP=210, V_GAP=10;
 const expandedNodes = new Set(['total']);
 
-function getVisibleChildren(node) {
-  if (!node.children || node.children.length === 0) return [];
-  if (node.isRef) return [];
-  if (!expandedNodes.has(node.id)) return [];
-  return node.children;
+function visKids(nd){
+  if(!nd.children||!nd.children.length||nd.isRef) return [];
+  return expandedNodes.has(nd.id)?nd.children:[];
 }
 
-function layoutTree(node, depth, yStart) {
-  node.x = depth * LEVEL_GAP + 60;
-  const kids = getVisibleChildren(node);
-  if (kids.length === 0) {
-    node.y = yStart;
-    node._h = CARD_H + V_GAP;
-    return node._h;
-  }
-  let y = yStart;
-  let totalH = 0;
-  for (const kid of kids) {
-    const h = layoutTree(kid, depth + 1, y);
-    y += h;
-    totalH += h;
-  }
-  // Center parent among children
-  const firstY = kids[0].y;
-  const lastY = kids[kids.length - 1].y;
-  node.y = (firstY + lastY) / 2;
-  node._h = totalH;
-  return totalH;
+function layoutTree(nd,depth,yStart){
+  nd.x=depth*LEVEL_GAP+40;
+  const kids=visKids(nd);
+  if(!kids.length){ nd.y=yStart; nd._h=CARD_H+V_GAP; return nd._h; }
+  let y=yStart,tot=0;
+  for(const k of kids){ const h=layoutTree(k,depth+1,y); y+=h; tot+=h; }
+  nd.y=(kids[0].y+kids[kids.length-1].y)/2;
+  nd._h=tot;
+  return tot;
 }
 
-// ========== RENDERING ==========
-function formatVal(node) {
-  if (node.value !== undefined && node.type === 'calc') {
-    if (node.unit === '백만₩') return fmtWon(node.value);
-    return fmtNum(node.value);
+// ========== FORMAT ==========
+function formatVal(nd){
+  if(nd.value!==undefined&&nd.type==='calc'){
+    return nd.unit==='백만₩'?fmtWon(nd.value):fmtNum(nd.value);
   }
-  if (node.isSingle) {
-    return node.unit === '%' ? fmtPct(node.value || 0) : fmtNum(node.value || 0);
-  }
-  if (node.dataKey) {
-    const [src, key] = node.dataKey.split('.');
-    const obj = src === 'S1' ? S1 : src === 'S2' ? S2 : S3;
-    if (!obj[key]) return '0';
-    let sum = 0, count = 0;
-    for (const seg of SEGMENTS) {
-      const v = obj[key][seg] && obj[key][seg][currentYear];
-      if (v !== undefined) { sum += v; count++; }
-    }
-    const avg = count > 0 ? sum / count : 0;
-    return node.unit === '%' ? fmtPct(avg) : fmtNum(avg);
+  if(nd.isSingle) return nd.unit==='%'?fmtPct(nd.value||0):fmtNum(nd.value||0);
+  if(nd.dataKey){
+    const[s,k]=nd.dataKey.split('.');
+    const obj=s==='S1'?S1:s==='S2'?S2:S3;
+    if(!obj[k])return '0';
+    let sum=0,cnt=0;
+    for(const seg of SEGMENTS){const v=obj[k][seg]&&obj[k][seg][currentYear];if(v!==undefined){sum+=v;cnt++;}}
+    const avg=cnt>0?sum/cnt:0;
+    return nd.unit==='%'?fmtPct(avg):fmtNum(avg);
   }
   return '';
 }
 
-function getPillClass(node) {
-  if (node.isRef) return 'pill pill-ref';
-  if (node.type === 'data') return 'pill pill-data';
-  if (node.type === 'assumption') return 'pill pill-input';
-  let cls = 'pill pill-calc';
-  if (node.colorClass) cls += ' ' + node.colorClass;
-  return cls;
+function pillCls(nd){
+  if(nd.isRef)return 'pill pill-ref';
+  if(nd.type==='data')return 'pill pill-data';
+  if(nd.type==='assumption')return 'pill pill-input';
+  let c='pill pill-calc';
+  if(nd.colorClass)c+=' '+nd.colorClass;
+  return c;
 }
 
-function renderAll() {
-  const tree = buildTree();
-  layoutTree(tree, 0, 60);
+// ========== RENDER ==========
+let editingNode=null;
 
-  const nodesDiv = document.getElementById('nodes');
-  const svg = document.getElementById('lines');
-  let pillsHtml = '';
-  let pathsHtml = '';
-  let opsHtml = '';
+function renderAll(){
+  const tree=buildTree();
+  layoutTree(tree,0,50);
+  const nodesDiv=document.getElementById('nodes');
+  const svg=document.getElementById('lines');
+  let pills='',paths='',ops='';
 
-  function walk(nd) {
-    const val = formatVal(nd);
-    const expanded = expandedNodes.has(nd.id);
-    const hasKids = nd.children && nd.children.length > 0 && !nd.isRef;
-    const arrowCls = hasKids ? (expanded ? ' expanded' : ' has-children') : '';
-    const editHint = nd.type === 'assumption' && !nd.isRef ? '<span class="pill-edit">&#9998;</span>' : '';
-    const dblclick = nd.segData && !nd.isRef ? ' ondblclick="event.stopPropagation();showModal(\x27' + nd.id + '\x27)"' : '';
+  function walk(nd){
+    const val=formatVal(nd);
+    const exp=expandedNodes.has(nd.id);
+    const hasK=nd.children&&nd.children.length>0&&!nd.isRef;
+    const aCls=hasK?(exp?' expanded':' has-kids'):'';
 
-    pillsHtml += '<div class="' + getPillClass(nd) + arrowCls + '" style="left:' + nd.x + 'px;top:' + nd.y + 'px" onclick="toggleNode(\x27' + nd.id + '\x27)"' + dblclick + ' data-id="' + nd.id + '">';
-    pillsHtml += '<span class="pill-label">' + nd.label + '</span>';
-    pillsHtml += '<span class="pill-value">' + val + '</span>';
-    pillsHtml += editHint + '</div>';
+    // Pill with click-to-edit for assumptions
+    const isEditable=nd.type==='assumption'&&!nd.isRef&&nd.segData;
+    const clickAction=isEditable
+      ? 'onclick="event.stopPropagation();startInlineEdit(\x27'+nd.id+'\x27)"'
+      : 'onclick="toggleNode(\x27'+nd.id+'\x27)"';
+    const segBtn=nd.segData&&!nd.isRef&&nd.type!=='assumption'
+      ? ' ondblclick="event.stopPropagation();showModal(\x27'+nd.id+'\x27)"':'';
 
-    const kids = getVisibleChildren(nd);
-    if (kids.length > 0) {
-      const x1 = nd.x + CARD_W;
-      const y1 = nd.y + CARD_H / 2;
+    pills+='<div class="'+pillCls(nd)+aCls+'" style="left:'+nd.x+'px;top:'+nd.y+'px" '+clickAction+segBtn+' data-id="'+nd.id+'">';
+    pills+='<span class="p-name">'+nd.label+'</span>';
+    pills+='<span class="p-val">'+val+'</span>';
+    if(isEditable)pills+='<span class="p-edit">click to edit</span>';
+    pills+='</div>';
 
-      // Draw operator circle
-      if (nd.op) {
-        const opX = x1 + 18;
-        const opY = y1;
-        opsHtml += '<div class="op-circle" style="left:' + (opX - 11) + 'px;top:' + (opY - 11) + 'px">' + nd.op + '</div>';
+    const kids=visKids(nd);
+    if(kids.length>0){
+      const x1=nd.x+CARD_W, y1=nd.y+CARD_H/2;
+      if(nd.op){
+        ops+='<div class="op-circle" style="left:'+(x1+12)+'px;top:'+(y1-12)+'px">'+nd.op+'</div>';
       }
-
-      for (const kid of kids) {
-        const x2 = kid.x;
-        const y2 = kid.y + CARD_H / 2;
-        const startX = nd.op ? x1 + 30 : x1;
-        const cx = (startX + x2) / 2;
-        pathsHtml += '<path d="M' + startX + ',' + y1 + ' C' + cx + ',' + y1 + ' ' + cx + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>';
+      for(const kid of kids){
+        const x2=kid.x, y2=kid.y+CARD_H/2;
+        const sx=nd.op?x1+36:x1+4;
+        const cx=(sx+x2)/2;
+        paths+='<path d="M'+sx+','+y1+' C'+cx+','+y1+' '+cx+','+y2+' '+x2+','+y2+'"/>';
         walk(kid);
       }
     }
   }
-
   walk(tree);
+  nodesDiv.innerHTML=pills+ops;
+  svg.innerHTML=paths;
 
-  nodesDiv.innerHTML = pillsHtml + opsHtml;
-  svg.innerHTML = pathsHtml;
+  // Size SVG
+  const ns=[];
+  (function c(nd){ns.push(nd);visKids(nd).forEach(c);})(tree);
+  const mx=Math.max(...ns.map(n=>n.x))+CARD_W+120;
+  const my=Math.max(...ns.map(n=>n.y))+CARD_H+120;
+  svg.setAttribute('width',mx);svg.setAttribute('height',my);
+  svg.style.width=mx+'px';svg.style.height=my+'px';
 
-  // Resize SVG to fit
-  const allNodes = [];
-  function collect(nd) { allNodes.push(nd); getVisibleChildren(nd).forEach(collect); }
-  collect(tree);
-  const maxX = Math.max(...allNodes.map(n => n.x)) + CARD_W + 100;
-  const maxY = Math.max(...allNodes.map(n => n.y)) + CARD_H + 100;
-  svg.setAttribute('width', maxX);
-  svg.setAttribute('height', maxY);
-  svg.style.width = maxX + 'px';
-  svg.style.height = maxY + 'px';
-
-  renderSummary();
   renderYearTabs();
+  renderSidePanel();
 }
 
-function renderSummary() {
-  const c = computed;
-  document.getElementById('summaryBar').innerHTML =
-    '<div class="summary-card sc-total"><div class="label">Total</div><div class="value">' + fmtWon(c.totalRevenue) + '</div></div>' +
-    '<div class="summary-card sc-mentoring"><div class="label">멘토링</div><div class="value">' + fmtWon(c.totalMentoring) + '</div></div>' +
-    '<div class="summary-card sc-ai"><div class="label">AI</div><div class="value">' + fmtWon(c.totalAI) + '</div></div>' +
-    '<div class="summary-card sc-mat"><div class="label">자료</div><div class="value">' + fmtWon(c.totalMat) + '</div></div>' +
-    '<div class="summary-card sc-sub"><div class="label">구독</div><div class="value">' + fmtWon(c.totalSub) + '</div></div>';
-}
-
-function renderYearTabs() {
-  const tabs = document.getElementById('yearTabs');
-  tabs.innerHTML = '';
-  for (const yr of YEARS) {
-    const btn = document.createElement('button');
-    btn.className = 'year-tab' + (yr === currentYear ? ' active' : '');
-    btn.textContent = yr;
-    btn.onclick = function() { currentYear = yr; recalcAndRender(); };
-    tabs.appendChild(btn);
+function renderYearTabs(){
+  const t=document.getElementById('yearTabs');t.innerHTML='';
+  for(const yr of YEARS){
+    const b=document.createElement('button');
+    b.className='year-tab'+(yr===currentYear?' active':'');
+    b.textContent=yr;
+    b.onclick=function(){currentYear=yr;recalcAndRender();};
+    t.appendChild(b);
   }
 }
 
-// ========== INTERACTIONS ==========
-function toggleNode(id) {
-  if (expandedNodes.has(id)) expandedNodes.delete(id);
-  else expandedNodes.add(id);
-  renderAll();
+// ========== INLINE EDIT ==========
+function startInlineEdit(nodeId){
+  const tree=buildTree();
+  function find(nd){if(nd.id===nodeId)return nd;for(const k of(nd.children||[])){const r=find(k);if(r)return r;}return null;}
+  const node=find(tree);
+  if(!node||!node.segData)return;
+  // Open modal with segment table for editing
+  showModal(nodeId);
 }
 
-function recalcAndRender() {
-  computed = calcAll(currentYear);
-  renderAll();
-}
-
-// ========== MODAL (segment editor) ==========
-let modalNode = null;
-function showModal(nodeId) {
-  const tree = buildTree();
-  function find(nd) {
-    if (nd.id === nodeId) return nd;
-    for (const kid of (nd.children || [])) { const r = find(kid); if (r) return r; }
-    return null;
-  }
-  const node = find(tree);
-  if (!node || !node.segData) return;
-
-  modalNode = node;
-  const yr = currentYear;
-  const sd = node.segData;
-  let rows = '';
-  for (const seg of SEGMENTS) {
-    let val, display;
-    if (sd.calc) {
-      val = computed[sd.calc][seg] || 0;
-      display = node.unit === '백만₩' ? fmtWon(val) : node.unit === '%' ? fmtPct(val) : fmtNum(val);
-      rows += '<tr><td>' + seg + '</td><td style="text-align:right">' + display + '</td></tr>';
-    } else if (sd.data) {
-      const src = sd.source === 'S1' ? S1 : sd.source === 'S2' ? S2 : S3;
-      val = (src[sd.data][seg] && src[sd.data][seg][yr]) || 0;
-      if (node.segEditable) {
-        display = node.unit === '%' ? (val * 100).toFixed(1) : (typeof val === 'number' ? val : 0);
-        rows += '<tr><td>' + seg + '</td><td style="text-align:right"><input type="number" step="any" value="' + display + '" data-source="' + sd.source + '" data-key="' + sd.data + '" data-seg="' + seg + '" data-unit="' + node.unit + '" onchange="onSegChange(this)" />' + (node.unit === '%' ? ' %' : '') + '</td></tr>';
+// ========== MODAL ==========
+let currentModalId=null;
+function showModal(nodeId){
+  currentModalId=nodeId;
+  const tree=buildTree();
+  function find(nd){if(nd.id===nodeId)return nd;for(const k of(nd.children||[])){const r=find(k);if(r)return r;}return null;}
+  const node=find(tree);
+  if(!node||!node.segData)return;
+  const yr=currentYear;
+  const sd=node.segData;
+  let rows='';
+  for(const seg of SEGMENTS){
+    if(sd.calc){
+      const val=computed[sd.calc][seg]||0;
+      const d=node.unit==='백만₩'?fmtWon(val):node.unit==='%'?fmtPct(val):fmtNum(val);
+      rows+='<tr><td>'+seg+'</td><td style="text-align:right">'+d+'</td></tr>';
+    } else if(sd.data){
+      const src=sd.source==='S1'?S1:sd.source==='S2'?S2:S3;
+      const val=(src[sd.data][seg]&&src[sd.data][seg][yr])||0;
+      if(node.segEditable){
+        const d=node.unit==='%'?(val*100).toFixed(1):(typeof val==='number'?val:0);
+        rows+='<tr><td>'+seg+'</td><td style="text-align:right"><input type="number" step="any" value="'+d+'" data-source="'+sd.source+'" data-key="'+sd.data+'" data-seg="'+seg+'" data-unit="'+node.unit+'" onchange="onSegChange(this)"/>'+(node.unit==='%'?' %':'')+'</td></tr>';
       } else {
-        display = node.unit === '%' ? fmtPct(val) : fmtNum(val);
-        rows += '<tr><td>' + seg + '</td><td style="text-align:right">' + display + '</td></tr>';
+        const d=node.unit==='%'?fmtPct(val):fmtNum(val);
+        rows+='<tr><td>'+seg+'</td><td style="text-align:right">'+d+'</td></tr>';
       }
     }
   }
-
-  document.getElementById('modalContent').innerHTML =
-    '<button class="close-btn" onclick="closeModal()">&times;</button>' +
-    '<h3>' + node.label + ' (' + currentYear + ')</h3>' +
-    '<table><thead><tr><th>세그먼트</th><th style="text-align:right">값 (' + node.unit + ')</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  document.getElementById('modalContent').innerHTML=
+    '<button class="close-btn" onclick="closeModal()">&times;</button>'+
+    '<h3>'+node.label+' — '+currentYear+'년 세그먼트별</h3>'+
+    '<table><thead><tr><th>세그먼트</th><th style="text-align:right">값 ('+node.unit+')</th></tr></thead><tbody>'+rows+'</tbody></table>';
   document.getElementById('modalOverlay').classList.add('show');
 }
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');currentModalId=null;}
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-window.onSegChange = function(input) {
-  const source = input.dataset.source;
-  const key = input.dataset.key;
-  const seg = input.dataset.seg;
-  const unit = input.dataset.unit;
-  let val = parseFloat(input.value);
-  if (isNaN(val)) return;
-  if (unit === '%') val = val / 100;
-  const src = source === 'S1' ? S1 : source === 'S2' ? S2 : S3;
-  if (!src[key]) src[key] = {};
-  if (!src[key][seg]) src[key][seg] = {};
-  src[key][seg][currentYear] = val;
-  recalcAndRender();
+window.onSegChange=function(input){
+  const src=input.dataset.source==='S1'?S1:input.dataset.source==='S2'?S2:S3;
+  let val=parseFloat(input.value);if(isNaN(val))return;
+  if(input.dataset.unit==='%')val=val/100;
+  if(!src[input.dataset.key])src[input.dataset.key]={};
+  if(!src[input.dataset.key][input.dataset.seg])src[input.dataset.key][input.dataset.seg]={};
+  src[input.dataset.key][input.dataset.seg][currentYear]=val;
+  computed=calcAll(currentYear);
+  renderAll();
+  // Re-open modal with updated values
+  if(currentModalId) showModal(currentModalId);
 };
 
+// ========== SIDE PANEL: Stacked Bar Chart + CAGR ==========
+let sidePanelOpen=false;
+function toggleSidePanel(){
+  sidePanelOpen=!sidePanelOpen;
+  document.getElementById('sidePanel').classList.toggle('open',sidePanelOpen);
+  if(sidePanelOpen)renderSidePanel();
+}
+
+function renderSidePanel(){
+  if(!sidePanelOpen)return;
+  const colors={mentoring:'#b91c1c',ai:'#6d28d9',mat:'#047857',sub:'#1d4ed8'};
+  const labels={mentoring:'멘토링',ai:'AI',mat:'자료',sub:'구독'};
+
+  // Calc all years
+  const yearData={};
+  for(const yr of YEARS){
+    const c=calcAll(yr);
+    yearData[yr]={mentoring:c.totalMentoring,ai:c.totalAI,mat:c.totalMat,sub:c.totalSub,total:c.totalRevenue};
+  }
+  const maxTotal=Math.max(...YEARS.map(y=>yearData[y].total));
+
+  let html='<div style="margin-bottom:16px">';
+  // Legend
+  html+='<div style="display:flex;gap:10px;margin-bottom:12px;font-size:11px">';
+  for(const k of ['mentoring','ai','mat','sub']){
+    html+='<div style="display:flex;align-items:center;gap:3px"><div style="width:10px;height:10px;border-radius:2px;background:'+colors[k]+'"></div>'+labels[k]+'</div>';
+  }
+  html+='</div>';
+
+  // Bars
+  for(const yr of YEARS){
+    const d=yearData[yr];
+    const pct=maxTotal>0?(d.total/maxTotal*100):0;
+    html+='<div class="chart-bar-group">';
+    html+='<div class="chart-label"><span>'+yr+'</span><span class="yr-val">'+fmtWon(d.total)+'</span></div>';
+    html+='<div class="chart-bar-wrap" style="width:'+Math.max(pct,5)+'%">';
+    for(const k of ['mentoring','ai','mat','sub']){
+      const segPct=d.total>0?(d[k]/d.total*100):25;
+      html+='<div class="chart-seg" style="width:'+segPct+'%;background:'+colors[k]+'">'+(segPct>8?fmtWon(d[k]):'')+'</div>';
+    }
+    html+='</div></div>';
+  }
+  html+='</div>';
+
+  // CAGR section
+  html+='<div class="cagr-section">';
+  html+='<div style="font-weight:700;font-size:13px;margin-bottom:8px">CAGR (2026→2030)</div>';
+  const items=[
+    {label:'Total Revenue', v0:yearData[2026].total, v4:yearData[2030].total},
+    {label:'멘토링', v0:yearData[2026].mentoring, v4:yearData[2030].mentoring},
+    {label:'AI', v0:yearData[2026].ai, v4:yearData[2030].ai},
+    {label:'자료', v0:yearData[2026].mat, v4:yearData[2030].mat},
+    {label:'구독', v0:yearData[2026].sub, v4:yearData[2030].sub}
+  ];
+  for(const it of items){
+    let cagr=0;
+    if(it.v0>0) cagr=Math.pow(it.v4/it.v0,1/4)-1;
+    const pct=(cagr*100).toFixed(1);
+    const cls=cagr>=0?'positive':'negative';
+    const arrow=cagr>=0?'▲':'▼';
+    html+='<div class="cagr-row"><span class="cagr-label">'+it.label+'</span><span class="cagr-val '+cls+'"><span class="cagr-arrow">'+arrow+'</span>'+pct+'%</span></div>';
+  }
+  html+='</div>';
+
+  document.getElementById('sideBody').innerHTML=html;
+}
+
+// ========== INTERACTIONS ==========
+function toggleNode(id){
+  if(expandedNodes.has(id))expandedNodes.delete(id);
+  else expandedNodes.add(id);
+  renderAll();
+}
+function recalcAndRender(){computed=calcAll(currentYear);renderAll();}
+
 // ========== PAN & ZOOM ==========
-let panX = 0, panY = 0, zoom = 1;
-let isPanning = false, startPanX, startPanY, startMouseX, startMouseY;
-
-function initPanZoom() {
-  const wrap = document.getElementById('canvas-wrap');
-  const canvas = document.getElementById('canvas');
-
-  wrap.addEventListener('mousedown', function(e) {
-    if (e.target.closest('.pill') || e.target.closest('.op-circle')) return;
-    isPanning = true;
-    startPanX = panX; startPanY = panY;
-    startMouseX = e.clientX; startMouseY = e.clientY;
-    wrap.classList.add('dragging');
+let panX=0,panY=0,zoom=1,isPanning=false,spx,spy,smx,smy;
+function initPanZoom(){
+  const wrap=document.getElementById('canvas-wrap');
+  const canvas=document.getElementById('canvas');
+  wrap.addEventListener('mousedown',function(e){
+    if(e.target.closest('.pill')||e.target.closest('.op-circle')||e.target.closest('.side-toggle'))return;
+    isPanning=true;spx=panX;spy=panY;smx=e.clientX;smy=e.clientY;
+    wrap.classList.add('dragging');e.preventDefault();
+  });
+  window.addEventListener('mousemove',function(e){
+    if(!isPanning)return;
+    panX=spx+(e.clientX-smx);panY=spy+(e.clientY-smy);
+    canvas.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
+  });
+  window.addEventListener('mouseup',function(){isPanning=false;wrap.classList.remove('dragging');});
+  wrap.addEventListener('wheel',function(e){
     e.preventDefault();
-  });
-
-  window.addEventListener('mousemove', function(e) {
-    if (!isPanning) return;
-    panX = startPanX + (e.clientX - startMouseX);
-    panY = startPanY + (e.clientY - startMouseY);
-    canvas.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
-  });
-
-  window.addEventListener('mouseup', function() {
-    isPanning = false;
-    wrap.classList.remove('dragging');
-  });
-
-  wrap.addEventListener('wheel', function(e) {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.max(0.3, Math.min(3, zoom * delta));
-    const rect = wrap.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    panX = mx - (mx - panX) * (newZoom / zoom);
-    panY = my - (my - panY) * (newZoom / zoom);
-    zoom = newZoom;
-    canvas.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
-  }, { passive: false });
-
-  // Close modal on overlay click
-  document.getElementById('modalOverlay').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
+    const d=e.deltaY>0?0.92:1.08;
+    const nz=Math.max(0.25,Math.min(3,zoom*d));
+    const r=wrap.getBoundingClientRect();
+    const mx=e.clientX-r.left,my=e.clientY-r.top;
+    panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;
+    canvas.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
+  },{passive:false});
+  document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
 }
 
 // ========== INIT ==========
-computed = calcAll(currentYear);
+computed=calcAll(currentYear);
 renderAll();
 initPanZoom();
+// Auto-open side panel
+toggleSidePanel();
 
 </script>
 </body>
